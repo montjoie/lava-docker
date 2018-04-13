@@ -78,6 +78,13 @@ COPY devices/ /root/devices/
 COPY scripts/extra_actions /root/
 RUN if [ -x /root/extra_actions ] ; then /root/extra_actions ; fi
 
+RUN git clone https://github.com/dlewin/NRC.git
+RUN cp NRC/powerman.sh /usr/local/bin
+RUN chmod 755 /usr/local/bin/powerman.sh
+RUN cp NRC/ci-client.py /usr/local/bin
+RUN chmod 755 /usr/local/bin/ci-client.py
+COPY nrc.cfg /usr/local/bin
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
