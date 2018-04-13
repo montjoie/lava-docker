@@ -75,6 +75,35 @@ COPY lava-screen.conf /root/
 
 COPY zmq_auth/ /etc/lava-dispatcher/certificates.d/
 
+RUN apt-get -y install git
+RUN git clone https://github.com/montjoie/NRC.git
+RUN cp NRC/powerman.sh /usr/local/bin
+RUN chmod 755 /usr/local/bin/powerman.sh
+RUN cp NRC/ci-client.py /usr/local/bin
+RUN chmod 755 /usr/local/bin/ci-client.py
+COPY nrc.cfg /usr/local/bin
+
+RUN git clone https://github.com/baylibre-acme/acme-cli.git /root/acme-cli
+RUN cp /root/acme-cli/acme-cli /usr/local/bin
+RUN chmod 755 /usr/local/bin/acme-cli
+
+RUN git clone https://github.com/ondrej1024/crelay.git
+RUN apt-get -y install build-essential libusb-1.0-0-dev libhidapi-dev libftdi-dev
+RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
+COPY scripts/crelay_power /usr/bin/
+RUN chmod +x /usr/bin/crelay_power
+
+RUN apt-get -y install python3-serial python-serial lava-lxc-mocker uhubctl
+RUN cd /root/ && git clone https://github.com/montjoie/lab-tools.git
+RUN cp /root/lab-tools/py* /usr/local/bin/
+RUN chmod 755 /usr/local/bin/pycambrionyx.py /usr/local/bin/pyser2net.py
+RUN cp /root/lab-tools/lxc-mocker/* /usr/bin/
+RUN chmod +x /usr/bin/lxc-*
+RUN cp /root/lab-tools/amaz.sh /usr/bin/
+RUN chmod +x /usr/bin/amaz.sh
+RUN cp /root/lab-tools/hsdk.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/hsdk.py
+
 EXPOSE 69/udp 80
 
 CMD /usr/local/bin/start.sh
