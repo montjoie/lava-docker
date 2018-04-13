@@ -1,0 +1,6 @@
+# Common Amlogic Meson GX configuration
+{% extends 'meson-gx-common.jinja2' %}
+
+{% set device_type = "meson-gxbb-nanopi-k2" %}
+{% set bootloader_prompt = "nanopi-k2#" %}
+{% set interrupt_ctrl_list = ['c'] %}
