@@ -60,6 +60,13 @@ COPY lava-screen.conf /root/
 
 COPY zmq_auth/ /etc/lava-dispatcher/certificates.d/
 
+RUN git clone https://github.com/montjoie/NRC.git
+RUN cp NRC/powerman.sh /usr/local/bin
+RUN chmod 755 /usr/local/bin/powerman.sh
+RUN cp NRC/ci-client.py /usr/local/bin
+RUN chmod 755 /usr/local/bin/ci-client.py
+COPY nrc.cfg /usr/local/bin
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
