@@ -1,0 +1,22 @@
+From ea7b5a5b9e3c506f57f98d8e4d00d5c037a5a091 Mon Sep 17 00:00:00 2001
+From: Kevin Hilman <khilman@baylibre.com>
+Date: Thu, 31 May 2018 13:24:11 -0700
+Subject: [PATCH] device-types: meson8b-odroidc1: interrupt with ctrl-c
+
+Signed-off-by: Kevin Hilman <khilman@baylibre.com>
+---
+ lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2 b/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
+index 84f6c3277..30eb1f0b1 100644
+--- a/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
+@@ -6,6 +6,7 @@
+ {% set bootloader_prompt = bootloader_prompt|default('odroidc#') %}
+ {% set interrupt_prompt = interrupt_prompt|default('stop autoboot') %}
+ {% set interrupt_char = interrupt_char|default('') %}
++{% set interrupt_ctrl_list = ['c'] %}
+ 
+ {% set bootm_kernel_addr = '0x21000000' %}
+ {% set bootm_ramdisk_addr = '0x22000000' %}

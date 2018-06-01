@@ -1,0 +1,47 @@
+From 30b1d65046ba59adac602e70ff40e22c9faaee01 Mon Sep 17 00:00:00 2001
+From: Kevin Hilman <khilman@baylibre.com>
+Date: Thu, 31 May 2018 09:50:27 -0700
+Subject: [PATCH] device-types: meson boards: fix interrupt_char
+
+Breaking into u-boot with '\n' creates an extra uboot prompt which
+causes problems with LAVAs pexpect that's looking for uboot prompts to
+decide when to send next commands.
+
+Changing interrupt_char to '' fixes the problem by not creating
+an "extra" uboot prompt right after breaking into uboot.
+
+This was noticed after the upgrade to 2018.4 due to the refactoring of
+how the bootloader commands are sent.
+
+Signed-off-by: Kevin Hilman <khilman@baylibre.com>
+---
+ lava_scheduler_app/tests/device-types/meson-gx-common.jinja2  | 2 +-
+ lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2 b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+index c666bea2f..6b3857c61 100644
+--- a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+@@ -5,7 +5,7 @@
+ {% set console_device = console_device|default('ttyAML0') %}
+ {% set baud_rate = baud_rate|default(115200) %}
+ {% set interrupt_prompt = interrupt_prompt|default('stop autoboot') %}
+-{% set interrupt_char = interrupt_char|default('\n') %}
++{% set interrupt_char = interrupt_char|default('') %}
+ 
+ {% set bootm_kernel_addr = '0x1080000' %}
+ {% set bootm_dtb_addr = '0x1000000' %}
+diff --git a/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2 b/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
+index 84f6e1281..84f6c3277 100644
+--- a/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson8b-odroidc1.jinja2
+@@ -5,7 +5,7 @@
+ {% set device_type = "meson8b-odroidc1" %}
+ {% set bootloader_prompt = bootloader_prompt|default('odroidc#') %}
+ {% set interrupt_prompt = interrupt_prompt|default('stop autoboot') %}
+-{% set interrupt_char = interrupt_char|default('\n') %}
++{% set interrupt_char = interrupt_char|default('') %}
+ 
+ {% set bootm_kernel_addr = '0x21000000' %}
+ {% set bootm_ramdisk_addr = '0x22000000' %}

@@ -1,0 +1,26 @@
+From 12d06dc5d54bcad639379d3857c7a66585bb5dc1 Mon Sep 17 00:00:00 2001
+From: Kevin Hilman <khilman@baylibre.com>
+Date: Thu, 31 May 2018 13:22:19 -0700
+Subject: [PATCH] device-types: base: allow interrupt_ctrl_list for uboot
+
+Some vendor u-boot devices require control charactuers to
+interrupt uboot.  Set it in base (but default to empty) so it
+can be overriddenn by device dict or device-type.
+
+Signed-off-by: Kevin Hilman <khilman@baylibre.com.>
+---
+ lava_scheduler_app/tests/device-types/base.jinja2 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lava_scheduler_app/tests/device-types/base.jinja2 b/lava_scheduler_app/tests/device-types/base.jinja2
+index 13b053080..798545591 100644
+--- a/lava_scheduler_app/tests/device-types/base.jinja2
++++ b/lava_scheduler_app/tests/device-types/base.jinja2
+@@ -66,6 +66,7 @@ constants:
+   u-boot:
+     interrupt-prompt: '{{ uboot_autoboot_prompt | default("Hit any key to stop autoboot") }}'
+     interrupt-character: '{{ uboot_interrupt_character | default(" ") }}'
++    interrupt_ctrl_list: {{ interrupt_ctrl_list  | default([]) }}
+     final-message: '{{ uboot_final_message | default("Starting kernel") }}'
+     error-messages:
+       - 'Resetting CPU'
