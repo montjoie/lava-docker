@@ -1,0 +1,25 @@
+From 779812fb1492f30b1157b46e7e7afec33e42897d Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 1 Jun 2018 12:10:57 +0200
+Subject: [PATCH] imx6q-sabrelite: boot mainline
+
+Change-Id: Ib030f0ccc0488666f3e648443d15ab959f9b2f0a
+---
+ lava_scheduler_app/tests/device-types/imx6q-sabrelite.jinja2 | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/lava_scheduler_app/tests/device-types/imx6q-sabrelite.jinja2 b/lava_scheduler_app/tests/device-types/imx6q-sabrelite.jinja2
+index ecdb0698f..a9b4f98ba 100644
+--- a/lava_scheduler_app/tests/device-types/imx6q-sabrelite.jinja2
++++ b/lava_scheduler_app/tests/device-types/imx6q-sabrelite.jinja2
+@@ -3,7 +3,6 @@
+ 
+ {% set device_type = "imx6q-sabrelite" %}
+ 
+-{% set bootloader_prompt = bootloader_prompt|default('U-Boot') %}
+ {% set console_device = console_device|default('ttymxc1') %}
+ 
+ {% set bootm_kernel_addr = '0x10000000' %}
+-- 
+2.13.6
+
