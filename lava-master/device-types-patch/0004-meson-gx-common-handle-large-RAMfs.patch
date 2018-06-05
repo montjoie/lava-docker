@@ -1,0 +1,31 @@
+From 8cf1c03250b5cd8ae7f740a424b0fa9845b322fe Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 28 Sep 2018 16:17:16 +0200
+Subject: [PATCH 4/4] meson-gx-common: handle large RAMfs
+
+Change-Id: I4c37632ee36a2510b094fe8a6b110dc2545d0cbd
+---
+ lava_scheduler_app/tests/device-types/meson-gx-common.jinja2 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2 b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+index 4d254a6fd..806af3edb 100644
+--- a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+@@ -9,11 +9,11 @@
+ 
+ {% set bootm_kernel_addr = bootm_kernel_addr|default('0x1080000') %}
+ {% set bootm_dtb_addr = bootm_dtb_addr|default('0x1000000') %}
+-{% set bootm_ramdisk_addr = bootm_ramdisk_addr|default('0x3000000') %}
++{% set bootm_ramdisk_addr = bootm_ramdisk_addr|default('0x13000000') %}
+ 
+ {% if use_booti %}
+ {% set booti_kernel_addr = '0x1080000' %}
+ {% set booti_dtb_addr = '0x1000000' %}
+-{% set booti_ramdisk_addr = '0x3000000' %}
++{% set booti_ramdisk_addr = '0x13000000' %}
+ {% endif %}
+ 
+-- 
+2.16.4
+
