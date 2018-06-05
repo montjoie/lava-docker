@@ -1,0 +1,25 @@
+From 181eb8eabbd481fd9ae22e4c97379103cf881589 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Tue, 5 Jun 2018 17:03:00 +0200
+Subject: [PATCH 2/2] meson-gxbb-p200: interrupt with ctrl-c
+
+The boot loader need also to receive carachters slower
+
+Change-Id: I25196d1cc68c78a7373fe0b6502dcb56a6871707
+---
+ lava_scheduler_app/tests/device-types/meson-gxbb-p200.jinja2 | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson-gxbb-p200.jinja2 b/lava_scheduler_app/tests/device-types/meson-gxbb-p200.jinja2
+index 04204c0c6..67d27851f 100644
+--- a/lava_scheduler_app/tests/device-types/meson-gxbb-p200.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson-gxbb-p200.jinja2
+@@ -3,3 +3,5 @@
+ 
+ {% set device_type = "meson-gxbb-p200" %}
+ {% set bootloader_prompt = bootloader_prompt|default('gxb_p200_v1#') %}
++{% set interrupt_ctrl_list = ['c'] %}
++{% set boot_character_delay = 10 %}
+-- 
+2.13.6
+
