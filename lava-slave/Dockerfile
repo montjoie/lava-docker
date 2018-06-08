@@ -92,6 +92,11 @@ RUN git clone https://github.com/baylibre-acme/acme-cli.git /root/acme-cli
 RUN cp /root/acme-cli/acme-cli /usr/local/bin
 RUN chmod 755 /usr/local/bin/acme-cli
 
+RUN apt-get -y install screen openssh-server
+RUN ssh-keygen -q -f /root/.ssh/id_rsa
+RUN cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys
+COPY lava-screen.conf /root/
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
