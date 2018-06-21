@@ -76,6 +76,9 @@ RUN chmod 755 /etc/init.d/lava-slave
 COPY scripts/lava-server-gunicorn /etc/init.d/
 RUN chmod 755 /etc/init.d/lava-server-gunicorn
 
+COPY 0001-Fix-map_scanned_results-when-test-status-string-is-i.patch /root
+RUN cd /usr/lib/python3/dist-packages && patch -p1 < /root/0001-Fix-map_scanned_results-when-test-status-string-is-i.patch
+
 COPY devices/ /root/devices/
 COPY device-types/ /root/device-types/
 COPY users/ /root/lava-users/

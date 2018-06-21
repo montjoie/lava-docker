@@ -1,0 +1,39 @@
+From 934fdb6b9e354867813442eb69b14538d874e8a7 Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Fri, 1 Jun 2018 18:10:18 +0100
+Subject: [PATCH] Fix map_scanned_results() when test status string is invalid
+
+When a test result produces an invalid status string, the correct
+value to return is None.  By returning False, lava-logs does not treat
+it as invalid and adds a False object in its list of test cases which
+then results in an uncaught exception when calling bulk_create():
+
+  File "/usr/lib/python3/dist-packages/django/db/models/query.py", line 404, in _populate_pk_values
+      if obj.pk is None:
+      AttributeError: 'bool' object has no attribute 'pk'
+
+Fix this by returning None rather than False when the status string is
+invalid.
+
+Change-Id: I080d1748998926725e3ea5f73487da1c32449ca6
+Signed-off-by: Guillaume Tucker <guillaume.tucker@collabora.com>
+---
+ lava_results_app/dbutils.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lava_results_app/dbutils.py b/lava_results_app/dbutils.py
+index 2778991a1..c587683a9 100644
+--- a/lava_results_app/dbutils.py
++++ b/lava_results_app/dbutils.py
+@@ -182,7 +182,7 @@ def map_scanned_results(results, job, meta_filename):  # pylint: disable=too-man
+             logger.debug("%s/%s %s%s", suite, name, measurement, units)
+         if result not in TestCase.RESULT_MAP:
+             logger.warning("[%d] Unrecognised result: '%s' for test case '%s'", job.id, result, name)
+-            return False
++            return None
+         try:
+             test_case = TestCase(name=name,
+                                  suite=suite,
+-- 
+2.13.6
+
