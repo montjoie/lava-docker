@@ -98,6 +98,7 @@ def main():
         workerdir = "output/%s/%s" % (host, name)
         os.mkdir("output/%s" % host)
         shutil.copy("deploy.sh", "output/%s/" % host)
+        pg_volume_name = "pgdata_" + name
         dockcomp = {}
         dockcomp["version"] = "2.0"
         dockcomp["services"] = {}
@@ -105,9 +106,12 @@ def main():
         dockcomp["services"][name] = {}
         dockcomp["services"][name]["hostname"] = name
         dockcomp["services"][name]["ports"] = [ "10080:80", "5555:5555", "5556:5556", "5500:5500" ]
-        dockcomp["services"][name]["volumes"] = [ "/boot:/boot", "/lib/modules:/lib/modules" ]
+        dockcomp["services"][name]["volumes"] = [ "/boot:/boot", "/lib/modules:/lib/modules", pg_volume_name + ":/var/lib/postgresql", "lava_job_output:/var/lib/lava-server/default/media/job-output/" ]
         dockcomp["services"][name]["build"] = {}
         dockcomp["services"][name]["build"]["context"] = name
+        dockcomp["volumes"] = {}
+        dockcomp["volumes"][pg_volume_name] = {}
+        dockcomp["volumes"]["lava_job_output"] = {}
         with open(dockcomposeymlpath, 'w') as f:
             yaml.dump(dockcomp, f)
 
