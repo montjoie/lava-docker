@@ -33,6 +33,8 @@ fi
 sudo -u postgres psql -c "ALTER USER lavaserver WITH PASSWORD '$(cat /root/pg_lava_password)';" || exit $?
 sed -i "s,^LAVA_DB_PASSWORD=.*,LAVA_DB_PASSWORD='$(cat /root/pg_lava_password)'," /etc/lava-server/instance.conf || exit $?
 
+/setup.sh || exit $?
+
 start apache2 || exit $?
 start lava-logs || exit $?
 start lava-master || exit $?
