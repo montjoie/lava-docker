@@ -101,3 +101,6 @@ do
 		lava-server manage devices add --device-type $devicetype --worker $worker $devicename || exit $?
 	done
 done
+
+# databases hack
+sudo -u postgres psql lavaserver -c "DELETE FROM lava_scheduler_app_worker WHERE lava_scheduler_app_worker.hostname = 'example.com';"
