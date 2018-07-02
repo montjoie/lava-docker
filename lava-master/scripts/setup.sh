@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [ -e /db_lavaserver ];then
+	echo "Restore database from backup"
+	sudo -u postgres psql < /db_lavaserver || exit $?
+	lava-server manage migrate || exit $?
+	echo "Restore jobs output from backup"
+	rm -r /var/lib/lava-server/default/media/job-output/*
+	tar xzf /joboutput.tar.gz || exit $?
+fi
+
 if [ -e /root/lava-users ];then
 	for ut in $(ls /root/lava-users)
 	do
