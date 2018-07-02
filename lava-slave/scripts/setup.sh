@@ -15,7 +15,7 @@ cd /root/lavacli
 LAVACLIOPTS="--uri $LAVA_MASTER_URI"
 
 # do a sort of ping for letting master to be up
-TIMEOUT=30
+TIMEOUT=60
 while [ $TIMEOUT -ge 1 ];
 do
 	lavacli $LAVACLIOPTS device-types list 2>/dev/null >/dev/null
