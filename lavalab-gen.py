@@ -64,7 +64,11 @@ template_settings_conf = string.Template("""
     "ALLOWED_HOSTS": [ $allowed_hosts ],
     "CSRF_TRUSTED_ORIGINS": ["$lava_http_fqdn"],
     "CSRF_COOKIE_SECURE": $cookie_secure,
-    "SESSION_COOKIE_SECURE": $session_cookie_secure
+    "SESSION_COOKIE_SECURE": $session_cookie_secure,
+    "SERVER_EMAIL": "admin@baylibre.com",
+    "EMAIL_HOST": "10.1.1.3",
+    "EMAIL_PORT": 25,
+    "EMAIL_USE_TLS": true
 }
 """)
 
