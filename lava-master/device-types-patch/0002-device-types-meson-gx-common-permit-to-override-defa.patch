@@ -1,0 +1,28 @@
+From e9a5b722f249fab726d154c2af6aa74708c25620 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 28 Sep 2018 16:07:41 +0200
+Subject: [PATCH 2/4] device-types: meson-gx-common: permit to override
+ defaults
+
+Change-Id: Id1c09a84da6b0f6c8a7b1558f3a209e865e1178c
+---
+ lava_scheduler_app/tests/device-types/meson-gx-common.jinja2 | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2 b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+index 79905c61d..46ce303a3 100644
+--- a/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson-gx-common.jinja2
+@@ -7,6 +7,6 @@
+ {% set interrupt_prompt = interrupt_prompt|default('stop autoboot') %}
+ {% set interrupt_ctrl_list = ['c'] %}
+ 
+-{% set bootm_kernel_addr = '0x1080000' %}
+-{% set bootm_dtb_addr = '0x1000000' %}
+-{% set bootm_ramdisk_addr = '0x3000000' %}
++{% set bootm_kernel_addr = bootm_kernel_addr|default('0x1080000') %}
++{% set bootm_dtb_addr = bootm_dtb_addr|default('0x1000000') %}
++{% set bootm_ramdisk_addr = bootm_ramdisk_addr|default('0x3000000') %}
+-- 
+2.16.4
+
