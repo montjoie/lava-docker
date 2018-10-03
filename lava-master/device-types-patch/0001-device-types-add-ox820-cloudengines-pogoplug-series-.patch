@@ -1,0 +1,37 @@
+From d5142af1ab13ef3a355304e4684f49974643d84e Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 28 Sep 2018 12:06:16 +0200
+Subject: [PATCH] device-types: add ox820-cloudengines-pogoplug-series-3
+
+This patch add the ox820-cloudengines-pogoplug-series-3 device.
+Tested on lab-baylibre
+
+Change-Id: Iaafafdb4cc232c6c768ca0709139aaa7e0512e48
+---
+ .../ox820-cloudengines-pogoplug-series-3.jinja2            | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100644 lava_scheduler_app/tests/device-types/ox820-cloudengines-pogoplug-series-3.jinja2
+
+diff --git a/lava_scheduler_app/tests/device-types/ox820-cloudengines-pogoplug-series-3.jinja2 b/lava_scheduler_app/tests/device-types/ox820-cloudengines-pogoplug-series-3.jinja2
+new file mode 100644
+index 000000000..624f2c694
+--- /dev/null
++++ b/lava_scheduler_app/tests/device-types/ox820-cloudengines-pogoplug-series-3.jinja2
+@@ -0,0 +1,14 @@
++{% extends 'base-uboot.jinja2' %}
++
++{% set console_device = console_device|default('ttyS0') %}
++{% set baud_rate = baud_rate|default(115200) %}
++{% set bootloader_prompt = bootloader_prompt|default('OX820>') %}
++{% set bootz_kernel_addr = '0x60500000' %}
++{% set bootz_ramdisk_addr = '0x60e00000' %}
++{% set bootz_dtb_addr = '0x62c00000' %}
++{% set booti_kernel_addr = '0x60500000' %}
++{% set booti_ramdisk_addr = '0x60e00000' %}
++{% set booti_dtb_addr = '0x62c00000' %}
++{% set base_ip_args = 'ip=dhcp' %}
++{% set interrupt_ctrl_list = ['c'] %}
++{% set uboot_mkimage_arch = 'arm' %}
+-- 
+2.16.4
+
