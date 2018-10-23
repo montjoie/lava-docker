@@ -85,6 +85,12 @@ RUN git clone https://github.com/baylibre-acme/acme-cli.git /root/acme-cli
 RUN cp /root/acme-cli/acme-cli /usr/local/bin
 RUN chmod 755 /usr/local/bin/acme-cli
 
+RUN git clone https://github.com/ondrej1024/crelay.git
+RUN apt-get -y install build-essential libusb-1.0-0-dev libhidapi-dev libftdi-dev
+RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
+COPY scripts/crelay_power /usr/bin/
+RUN chmod +x /usr/bin/crelay_power
+
 EXPOSE 69/udp 80
 
 CMD /usr/local/bin/start.sh
