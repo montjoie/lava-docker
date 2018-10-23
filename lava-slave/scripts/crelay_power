@@ -1,0 +1,67 @@
+#!/bin/sh
+
+LOCKF=/tmp/crelay.lock
+
+lock()
+{
+	TIMEOUT=30
+	while [ $TIMEOUT -ge 1 ]
+	do
+		mkdir $LOCKF
+		if [ $? -eq 0 ];then
+			return 0
+		fi
+		TIMEOUT=$(($TIMEOUT-1))
+		sleep 1
+		echo "DEBUG: wait $TIMEOUT"
+	done
+	return 1
+}
+
+
+unlock() {
+	rmdir $LOCKF
+}
+
+do_action() {
+	lock || return $?
+	crelay -s $SERIAL $*
+	RET=$?
+	unlock
+	return $RET
+}
+
+SERIAL=$(crelay -i |grep 'Sainsmart USB-HID 16-channel relay card' | sed 's,.*serial ,,' | cut -d\) -f1)
+
+if [ -z "$SERIAL" ];then
+	exit 1
+fi
+
+case $1 in
+switch_off)
+	do_action $2 off
+	exit $?
+;;
+switch_on)
+	do_action $2 on
+	exit $?
+;;
+reset)
+	do_action $2 off || exit $?
+	sleep 4
+	do_action $2 on || exit $?
+	exit $?
+;;
+esac
+
+case $2 in
+reset)
+	$0 $1 off || exit $?
+	sleep 4
+	$0 $1 on
+	exit $?
+;;
+esac
+
+do_action $*
+exit $?
