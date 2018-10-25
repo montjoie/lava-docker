@@ -77,6 +77,12 @@ RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
 COPY scripts/crelay_power /usr/bin/
 RUN chmod +x /usr/bin/crelay_power
 
+# install custom ser2net
+RUN wget https://download.sourceforge.net/ser2net/ser2net-3.5.tar.gz
+RUN tar xzf ser2net-3.5.tar.gz
+COPY ser2net.patch /root/
+RUN cd ser2net-3.5 && patch -p1 < /root/ser2net.patch && ./configure && make && cp ser2net /usr/sbin/
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
