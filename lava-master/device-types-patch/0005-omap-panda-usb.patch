@@ -1,0 +1,19 @@
+diff --git a/lava_scheduler_app/tests/device-types/panda.jinja2 b/lava_scheduler_app/tests/device-types/panda.jinja2
+index 729167504..8da1933ce 100644
+--- a/lava_scheduler_app/tests/device-types/panda.jinja2
++++ b/lava_scheduler_app/tests/device-types/panda.jinja2
+@@ -8,7 +8,7 @@
+ {% else %}
+ {% set extra_kernel_args = "fixrtc nocompcache vram=48M omapfb.vram=0:24M mem=456M@0x80000000 mem=512M@0xA0000000 rootdelay=5" %}
+ {% endif %}
+-{% set bootloader_prompt = bootloader_prompt|default('U-Boot') %}
++{% set bootloader_prompt = bootloader_prompt|default('=>') %}
+ {% set bootz_kernel_addr = '0x82000000' %}
+ {% set bootz_ramdisk_addr = '0x84000000' %}
+ {% set bootz_dtb_addr = '0x83f00000' %}
+@@ -19,3 +19,5 @@
+ {% set uboot_needs_usb = true %}
+ {% set action_timeout_u_boot_commands = 2 %}
+ {% set uboot_mkimage_arch = 'arm' %}
++{% set interrupt_char = interrupt_char|default(' ') %}
++{% set interrupt_ctrl_list = ['c'] %}
