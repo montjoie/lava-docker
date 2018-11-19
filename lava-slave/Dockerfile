@@ -79,6 +79,9 @@ COPY brainstem /brainstem
 RUN chmod 755 /brainstem/install.sh
 RUN /brainstem/install.sh
 
+COPY cambrionix cbrxd-arm-0.11.0b742.tar.gz /cambrionix/
+RUN cd /cambrionix/ && tar xzf cbrxd-arm-0.11.0b742.tar.gz && ls -l
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
