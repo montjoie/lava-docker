@@ -74,13 +74,13 @@ RUN tar xzf ser2net-3.5.tar.gz
 COPY ser2net.patch /root/
 RUN cd ser2net-3.5 && patch -p1 < /root/ser2net.patch && ./configure && make && cp ser2net /usr/sbin/
 
-RUN apt-get -y install python-pip python-cffi
-COPY brainstem /brainstem
-RUN chmod 755 /brainstem/install.sh
-RUN /brainstem/install.sh
+#RUN apt-get -y install python-pip python-cffi
+#COPY brainstem /brainstem
+#RUN chmod 755 /brainstem/install.sh
+#RUN /brainstem/install.sh
 
-COPY cambrionix cbrxd-arm-0.11.0b742.tar.gz /cambrionix/
-RUN cd /cambrionix/ && tar xzf cbrxd-arm-0.11.0b742.tar.gz && ls -l
+#COPY cambrionix cbrxd-arm-0.11.0b742.tar.gz /cambrionix/
+#RUN cd /cambrionix/ && tar xzf cbrxd-arm-0.11.0b742.tar.gz && ls -l
 
 EXPOSE 69/udp 80
 
