@@ -1,0 +1,44 @@
+diff --git a/lava_dispatcher/actions/deploy/download.py b/lava_dispatcher/actions/deploy/download.py
+index d89e9ebfa..6d6a7c3e2 100644
+--- a/lava_dispatcher/actions/deploy/download.py
++++ b/lava_dispatcher/actions/deploy/download.py
+@@ -325,7 +325,11 @@ class DownloadHandler(Action):  # pylint: disable=too-many-instance-attributes
+         # LAVA expects.
+         if self.size:
+             if self.size != downloaded_size:
+-                raise InfrastructureError("Download finished (%i bytes) but was not expected size (%i bytes), check your networking." % (downloaded_size, self.size))
++                if md5sum is not None or sha256sum is not None:
++                    # Give download a chance to pass the hash, in case of "Content-Encoding: gzip"
++                    self.logger.info("Download finished (%i bytes) but was not expected size (%i bytes), check your networking." % (downloaded_size, self.size))
++                else:
++                    raise InfrastructureError("Download finished (%i bytes) but was not expected size (%i bytes), check your networking." % (downloaded_size, self.size))
+ 
+         # set the dynamic data into the context
+         self.set_namespace_data(action='download-action', label=self.key, key='file', value=fname)
+@@ -450,13 +454,14 @@ class HttpDownloadAction(DownloadHandler):
+         res = None
+         try:
+             self.logger.debug("Validating that %s exists", self.url.geturl())
+-            res = requests.head(self.url.geturl(), allow_redirects=True)
++            # Force the non-use of Accept-Encoding: gzip, this will permit to know the final size
++            res = requests.head(self.url.geturl(), allow_redirects=True, headers={'Accept-Encoding': ''})
+             if res.status_code != requests.codes.OK:  # pylint: disable=no-member
+                 # try using (the slower) get for services with broken redirect support
+                 self.logger.debug("Using GET because HEAD is not supported properly")
+                 res.close()
+-                res = requests.get(
+-                    self.url.geturl(), allow_redirects=True, stream=True)
++                # Like for HEAD, we need get a size, so disable gzip
++                res = requests.get(self.url.geturl(), allow_redirects=True, stream=True, headers={'Accept-Encoding': ''})
+                 if res.status_code != requests.codes.OK:  # pylint: disable=no-member
+                     self.errors = "Resource unavailable at '%s' (%d)" % (self.url.geturl(), res.status_code)
+ 
+@@ -482,6 +487,8 @@ class HttpDownloadAction(DownloadHandler):
+                 # This is an Infrastructure error because the validate function
+                 # checked that the file does exist.
+                 raise InfrastructureError("Unable to download '%s'" % (self.url.geturl()))
++            if res.headers.get('Content-Encoding') == 'gzip' and self.size == -1 and md5sum is None and sha256sum is None:
++                self.logger.warn("I will Cannot check download size due to Content-Encoding: gzip. Consider using md5sum/sha256")
+             for buff in res.iter_content(HTTP_DOWNLOAD_CHUNK_SIZE):
+                 yield buff
+         except requests.RequestException as exc:
