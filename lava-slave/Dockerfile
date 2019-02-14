@@ -83,6 +83,10 @@ RUN tar xzf ser2net-3.5.tar.gz
 COPY ser2net.patch /root/
 RUN cd ser2net-3.5 && patch -p1 < /root/ser2net.patch && ./configure && make && cp ser2net /usr/sbin/
 
+RUN apt-get -y install python3-serial python-serial
+COPY cambrionix/pycambrionyx.py /usr/local/bin/
+RUN chmod 755 /usr/local/bin/pycambrionyx.py
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
