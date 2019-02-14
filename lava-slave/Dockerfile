@@ -91,6 +91,10 @@ RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
 COPY scripts/crelay_power /usr/bin/
 RUN chmod +x /usr/bin/crelay_power
 
+RUN apt-get -y install python3-serial python-serial
+COPY cambrionix/pycambrionyx.py /usr/local/bin/
+RUN chmod 755 /usr/local/bin/pycambrionyx.py
+
 EXPOSE 69/udp 80
 
 CMD /usr/local/bin/start.sh
