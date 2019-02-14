@@ -150,4 +150,9 @@ if [ -e /etc/lava-dispatcher/certificates.d/$(hostname).key ];then
 	(cd /etc/lava-dispatcher/certificates.d; if [ -e master.key ]; then cp master.key $LAVA_MASTER.key; fi)
 	sed -i "s,.*MASTER_CERT=.*,MASTER_CERT=\"--master-cert /etc/lava-dispatcher/certificates.d/$LAVA_MASTER.key\"," /etc/lava-dispatcher/lava-slave
 fi
+
+if [ -e /dev/cambrionix-01 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-01 &
+fi
+
 exit 0
