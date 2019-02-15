@@ -94,6 +94,8 @@ RUN apt-get -y install python3-serial python-serial
 COPY cambrionix/pycambrionyx.py /usr/local/bin/
 RUN chmod 755 /usr/local/bin/pycambrionyx.py
 
+RUN apt-get -y install lava-lxc-mocker
+
 EXPOSE 69/udp 80
 
 CMD /start.sh
