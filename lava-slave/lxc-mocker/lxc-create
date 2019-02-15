@@ -1,0 +1,100 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2018 Linaro Limited
+#
+# Author: Senthil Kumaran S <senthil.kumaran@linaro.org>
+#
+# This file is part of LAVA LXC mocker.
+#
+# Released under the MIT License:
+# http://www.opensource.org/licenses/mit-license.php
+#
+# Mocks lxc-create command which is used by LAVA.
+
+# Get the list of requested packages.
+PACKAGES=$(sed 's/,/ /g' <<< $(cut -d' ' -f1 <<< $(awk -F'--packages ' '{print $2}' <<< "$@")))
+
+while getopts "qt:n:" opt; do
+    case $opt in
+        q)
+            QUIET=1
+            ;;
+        t)
+            TEMPLATE="$OPTARG"
+		echo "DEBUG: getopt TEMPLATE=$TEMPLATE"
+            ;;
+        n)
+            LXC_NAME="$OPTARG"
+		echo "DEBUG: getopt LXC_NAME=$LXC_NAME"
+            ;;
+        *)
+            ;;
+    esac
+done
+
+RELEASE="stretch"
+while [ $# -ge 1 ]
+do
+	case $1 in
+	-q)
+		shift
+	;;
+	-n)
+		shift
+		LXC_NAME="$1"
+		shift
+	;;
+	--release)
+		shift
+		echo "DEBUG: set release to $1"
+		RELEASE="$1"
+		shift
+	;;
+	*)
+		echo "DEBUG: skip $1"
+		shift
+	;;
+	esac
+done
+
+if [ -z "$LXC_NAME" ];then
+	echo "ERROR: need a LXC_NAME"
+	exit 1
+fi
+
+echo "DEBUG: release $RELEASE"
+apt-get -y install debootstrap rsync || exit $?
+
+mkdir -p /var/lib/lxc/${LXC_NAME}/rootfs || exit $?
+
+if [ -e /var/lib/lxc/cache/ ];then
+	echo "DEBUG: copy cached contents"
+	mkdir -p /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/
+	rsync -a /var/lib/lxc/cache/ /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/
+fi
+
+#TODO change stretch
+debootstrap --variant=minbase $RELEASE /var/lib/lxc/${LXC_NAME}/rootfs || exit $?
+
+if [ "$PACKAGES" ] && [ "$QUIET" ]; then
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get -q update > /dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get -q upgrade -y > /dev/null 2>&1
+    # install the requested packages.
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get -q install -y $PACKAGES > /dev/null 2>&1
+elif [ "$PACKAGES" ]; then
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get update
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get upgrade -y
+    # install the requested packages.
+    DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get install -y $PACKAGES
+fi
+
+mkdir -p /var/lib/lxc/cache
+rsync -a /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/ /var/lib/lxc/cache/
+
+# BIG FAT TODO: handle errors
+# now mount /dev and /sys
+mount -t devtmpfs none /var/lib/lxc/${LXC_NAME}/rootfs/dev
+mount -t sysfs none /var/lib/lxc/${LXC_NAME}/rootfs/sys
+
+exit 0
