@@ -1,0 +1,43 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2018 Linaro Limited
+#
+# Author: Senthil Kumaran S <senthil.kumaran@linaro.org>
+#
+# This file is part of LAVA LXC mocker.
+#
+# Released under the MIT License:
+# http://www.opensource.org/licenses/mit-license.php
+#
+# Mocks lxc-destroy command which is used by LAVA.
+
+while getopts "fn:" opt; do
+    case $opt in
+        n)
+            LXC_NAME="$OPTARG"
+            ;;
+        *)
+            ;;
+    esac
+done
+
+if [ "$LXC_NAME" ]; then
+    echo "DEBUG: cache APT content"
+    mkdir -p /var/lib/lxc/cache
+    rsync -a /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/ /var/lib/lxc/cache/
+    # Filter a second time on ${LXC_NAME}/rootfs since lsof coufound all /dev 
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/dev | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs --no-run-if-empty kill
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/sys | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs --no-run-if-empty kill
+    sleep 2
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/dev | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs --no-run-if-empty kill -9
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/sys | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs --no-run-if-empty kill -9
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/dev
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/proc
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/sys
+    # Remove lxc rootfs directory if any
+    rm --one-file-system -rf /var/lib/lxc/${LXC_NAME}
+    # echo container destroyed message
+    echo "Destroyed container $LXC_NAME"
+    exit 0
+fi
