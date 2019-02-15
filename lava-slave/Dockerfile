@@ -73,6 +73,10 @@ COPY lava-screen.conf /root/
 
 COPY zmq_auth/ /etc/lava-dispatcher/certificates.d/
 
+RUN apt-get -y install lava-lxc-mocker
+COPY lxc-mocker/* /usr/bin/
+RUN chmod +x /usr/bin/lxc-*
+
 EXPOSE 69/udp 80
 
 CMD /usr/local/bin/start.sh
