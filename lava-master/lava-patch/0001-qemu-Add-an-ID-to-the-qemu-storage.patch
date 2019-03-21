@@ -1,0 +1,304 @@
+From c8a10d1ac7ef753e8ec44e5931edb99ccd01eb89 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Mon, 7 Jan 2019 14:20:22 +0100
+Subject: [PATCH] qemu: Add an ID to the qemu storage
+
+While trying to test all possible qemu machine on LAVA, I found that
+most cannot ran tests since they are stored on a qcow2 image.
+This qcow2 image is then connected by any of IDE, SCSI, virtio
+via this qemu option
+"-drive format=qcow2,file=/var/lib/lava/dispatcher/tmp/jobid/apply-overlay-guest-49d_bpy5/lava-guest.qcow2,media=disk,if=XXXX"
+
+But for some QEMU machine all thoses bus are not availlable.
+For example the qemu ARM cubieboard does not have any of thoses.
+After some research and discussion on #qemu, the only way to add the LAVA qemu
+test storage on cubieboard is with:
+"-device ide-hd,drive=lavatest"
+where drive=id must be the same as the id present on "-drive"
+
+So this patch adds such id on the "-drive" option.
+This id could be tuned via a new "guestfs_driverid" option.
+---
+ .../examples/test-jobs/qemu-cubieboard.yaml   | 69 +++++++++++++++++++
+ .../examples/test-jobs/qemu-ppc-bamboo.yaml   | 53 ++++++++++++++
+ .../examples/test-jobs/qemu-vexpress-a9.yaml  | 69 +++++++++++++++++++
+ doc/v2/qemu_options.rst                       | 52 ++++++++++++++
+ lava_dispatcher/actions/boot/qemu.py          |  7 +-
+ .../tests/device-types/kvm.jinja2             |  2 +
+ .../tests/device-types/qemu.jinja2            |  2 +
+ 7 files changed, 252 insertions(+), 2 deletions(-)
+ create mode 100644 doc/v2/examples/test-jobs/qemu-cubieboard.yaml
+ create mode 100644 doc/v2/examples/test-jobs/qemu-ppc-bamboo.yaml
+ create mode 100644 doc/v2/examples/test-jobs/qemu-vexpress-a9.yaml
+
+diff --git a/doc/v2/examples/test-jobs/qemu-cubieboard.yaml b/doc/v2/examples/test-jobs/qemu-cubieboard.yaml
+new file mode 100644
+index 000000000..db8b4366e
+--- /dev/null
++++ b/doc/v2/examples/test-jobs/qemu-cubieboard.yaml
+@@ -0,0 +1,69 @@
++device_type: qemu
++job_name: Boot with tests on qemu-cubieboard
++
++actions:
++- deploy:
++    images:
++      dtb:
++        image_arg: -dtb {dtb}
++        url: __FQDN__/sun4i-a10-cubieboard.dtb
++      kernel:
++        image_arg: -kernel {kernel}
++        url: __FQDN__/zImage
++      ramdisk:
++        image_arg: -initrd {ramdisk}
++        url: __FQDN__/rootfs.cpio.gz
++    os: oe
++    timeout:
++      minutes: 3
++    to: tmpfs
++- boot:
++    media: tmpfs
++    method: qemu
++    prompts:
++    - '/ #'
++    timeout:
++      minutes: 5
++
++- test:
++    definitions:
++    - from: inline
++      name: downloadmodule
++      path: inline/dm.yaml
++      repository:
++        metadata:
++          description: Download modules
++          format: Lava-Test Test Definition 1.0u
++          name: download_modules
++        run:
++          steps:
++          - wget __FQDN__/modules.tar.gz
++          - tar xvzf modules.tar.gz -C /
++    - from: git
++      name: Boot
++      path: execs/boot.yaml
++      repository: https://github.com/montjoie/lava-tests.git
++    timeout:
++      minutes: 25
++
++context:
++  arch: arm
++  cpu: cortex-a7
++  extra_options:
++  - -append "console=ttyS0 root=/dev/ram0"
++  - -device ide-hd,drive=lavatest
++  guestfs_interface: none
++  machine: cubieboard
++  model: model=allwinner-emac
++
++priority: high
++timeouts:
++  action:
++    minutes: 10
++  actions:
++    power-off:
++      seconds: 30
++  job:
++    minutes: 30
++visibility: public
++
+diff --git a/doc/v2/examples/test-jobs/qemu-ppc-bamboo.yaml b/doc/v2/examples/test-jobs/qemu-ppc-bamboo.yaml
+new file mode 100644
+index 000000000..a07eb911c
+--- /dev/null
++++ b/doc/v2/examples/test-jobs/qemu-ppc-bamboo.yaml
+@@ -0,0 +1,53 @@
++device_type: qemu
++job_name: Boot with test on qemu-ppc-bamboo
++
++actions:
++- deploy:
++    images:
++      kernel:
++        image_arg: -kernel {kernel}
++        url: __FQDN__/vmlinux
++      ramdisk:
++        image_arg: -initrd {ramdisk}
++        url: __FQDN__/rootfs.cpio.gz
++    os: oe
++    timeout:
++      minutes: 3
++    to: tmpfs
++- boot:
++    media: tmpfs
++    method: qemu
++    prompts:
++    - '/ #'
++    timeout:
++      minutes: 5
++
++- test:
++    definitions:
++    - from: git
++      name: Boot
++      path: execs/boot.yaml
++      repository: https://github.com/montjoie/lava-tests.git
++    timeout:
++      minutes: 25
++
++context:
++  arch: ppc
++  extra_options:
++  - -append "console=ttyS0 root=/dev/ram0"
++  - -device virtio-scsi-pci,id=scsi
++  - -device scsi-hd,drive=test
++  guestfs_driveid: test
++  guestfs_interface: none
++  machine: bamboo
++  netdevice: tap
++priority: high
++timeouts:
++  action:
++    minutes: 10
++  actions:
++    power-off:
++      seconds: 30
++  job:
++    minutes: 30
++visibility: public
+diff --git a/doc/v2/examples/test-jobs/qemu-vexpress-a9.yaml b/doc/v2/examples/test-jobs/qemu-vexpress-a9.yaml
+new file mode 100644
+index 000000000..3f224c8d4
+--- /dev/null
++++ b/doc/v2/examples/test-jobs/qemu-vexpress-a9.yaml
+@@ -0,0 +1,69 @@
++device_type: qemu
++job_name: Boot with tests on qemu-vexpress-a9
++
++actions:
++- deploy:
++    images:
++      dtb:
++        image_arg: -dtb {dtb}
++        url: __FQDN__/vexpress-v2p-ca9.dtb
++      kernel:
++        image_arg: -kernel {kernel}
++        url: __FQDN__/zImage
++      ramdisk:
++        image_arg: -initrd {ramdisk}
++        url: __FQDN__/rootfs.cpio.gz
++    os: oe
++    timeout:
++      minutes: 3
++    to: tmpfs
++- boot:
++    media: tmpfs
++    method: qemu
++    prompts:
++    - '/ #'
++    timeout:
++      minutes: 5
++
++- test:
++    definitions:
++    - from: inline
++      name: downloadmodule
++      path: inline/dm.yaml
++      repository:
++        metadata:
++          description: Download modules
++          format: Lava-Test Test Definition 1.0u
++          name: download_modules
++        run:
++          steps:
++          - wget __FQDN__/modules.tar.gz
++          - tar xvzf modules.tar.gz -C /
++    - from: git
++      name: Boot
++      path: execs/boot.yaml
++      repository: https://github.com/montjoie/lava-tests.git
++    timeout:
++      minutes: 25
++
++context:
++  arch: arm
++  cpu: cortex-a9
++  extra_options:
++  - -append "console=ttyAMA0 root=/dev/ram0"
++  - -device virtio-bk-device,drive=lavatest
++  guestfs_interface: none
++  machine: vexpress-a9
++  model: model=lan9118
++
++priority: high
++timeouts:
++  action:
++    minutes: 10
++  actions:
++    power-off:
++      seconds: 30
++  job:
++    minutes: 30
++visibility: public
++
+diff --git a/lava_dispatcher/actions/boot/qemu.py b/lava_dispatcher/actions/boot/qemu.py
+index e372edb05..46b6becc8 100644
+--- a/lava_dispatcher/actions/boot/qemu.py
++++ b/lava_dispatcher/actions/boot/qemu.py
+@@ -270,9 +270,12 @@ class CallQemuAction(Action):
+             interface = self.job.device["actions"]["deploy"]["methods"]["image"][
+                 "parameters"
+             ]["guest"].get("interface", "ide")
++            driveid = self.job.device["actions"]["deploy"]["methods"]["image"][
++                "parameters"
++            ]["guest"].get("driveid", "lavatest")
+             self.sub_command.append(
+-                "-drive format=qcow2,file=%s,media=disk,if=%s"
+-                % (os.path.realpath(guest), interface)
++                "-drive format=qcow2,file=%s,media=disk,if=%s,id=%s"
++                % (os.path.realpath(guest), interface, driveid)
+             )
+             # push the mount operation to the test shell pre-command to be run
+             # before the test shell tries to execute.
+diff --git a/lava_scheduler_app/tests/device-types/kvm.jinja2 b/lava_scheduler_app/tests/device-types/kvm.jinja2
+index d20c9f2b9..43c8dfb5a 100644
+--- a/lava_scheduler_app/tests/device-types/kvm.jinja2
++++ b/lava_scheduler_app/tests/device-types/kvm.jinja2
+@@ -5,6 +5,7 @@
+ # allow job context override - use a different variable name, undefined if not in job context
+ {% set base_guest_fs_size = guestfs_size | default(512) %}
+ {% set qemu_guest_fs_interface = guestfs_interface | default('ide') %}
++{% set qemu_guest_fs_driveid = guestfs_driveid | default('lavatest') %}
+ {% set boot_order = installer_boot_order | default('c') %}
+ 
+ actions:
+@@ -15,6 +16,7 @@ actions:
+           guest:
+             size: {{ base_guest_fs_size }}  # in Mb
+             interface: {{ qemu_guest_fs_interface }}
++            driveid: {{ qemu_guest_fs_driveid }}
+   boot:
+     connections:
+       serial:
+diff --git a/lava_scheduler_app/tests/device-types/qemu.jinja2 b/lava_scheduler_app/tests/device-types/qemu.jinja2
+index 025847b0b..6e4b65437 100644
+--- a/lava_scheduler_app/tests/device-types/qemu.jinja2
++++ b/lava_scheduler_app/tests/device-types/qemu.jinja2
+@@ -10,6 +10,7 @@
+ {# allow job context override - use a different variable name, undefined if not in job context #}
+ {% set base_guest_fs_size = guestfs_size | default(512) %}
+ {% set qemu_guest_fs_interface = guestfs_interface | default('ide') %}
++{% set qemu_guest_fs_driveid = guestfs_driveid | default('lavatest') %}
+ 
+ {# see https://packages.debian.org/stretch/amd64/qemu-system-misc/filelist #}
+ {% set qemu_misc_architectures = [
+@@ -44,6 +45,7 @@ actions:
+           guest:
+             size: {{ base_guest_fs_size }}  # in Mb
+             interface: {{ qemu_guest_fs_interface }}
++            driveid: {{ qemu_guest_fs_driveid }}
+   boot:
+     connections:
+       serial:
+-- 
+2.19.2
+
