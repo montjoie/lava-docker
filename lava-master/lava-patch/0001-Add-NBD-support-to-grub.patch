@@ -1,0 +1,45 @@
+From df741db435fa9879a39b191b255b85d48d257d51 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Thu, 14 Mar 2019 16:18:42 +0100
+Subject: [PATCH] Add NBD support to grub
+
+Boards booting with grub cannot currently use NBD for storing their
+rootfs.
+This patch adds support for NBD when booting with grub method.
+---
+ .../tests/device-types/base-grub.jinja2              | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/lava_scheduler_app/tests/device-types/base-grub.jinja2 b/lava_scheduler_app/tests/device-types/base-grub.jinja2
+index c2e1a10f3..0410a1591 100644
+--- a/lava_scheduler_app/tests/device-types/base-grub.jinja2
++++ b/lava_scheduler_app/tests/device-types/base-grub.jinja2
+@@ -64,6 +64,7 @@ actions:
+       serial:
+     methods:
+       tftp:
++      nbd:
+   boot:
+     connections:
+       serial:
+@@ -87,6 +88,17 @@ actions:
+           - clear
+           - boot
+ {% endblock ramdisk_commands %}
++        nbd:
++          commands:
++          - clear
++          - insmod linux
++          - clear
++          - insmod tftp
++          - clear
++          - 'linux (tftp,{SERVER_IP})/{KERNEL} {{ console_args }} {{ base_ip_args }} {{ base_nbdroot_args }} {{ base_kernel_args }}'
++          - clear
++          - initrd (tftp,{SERVER_IP})/{RAMDISK}
++          - boot
+         nfs:
+           commands:
+ {% block nfs_commands %}
+-- 
+2.19.2
+
