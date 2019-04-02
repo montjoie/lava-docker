@@ -1,0 +1,36 @@
+From b33ec6dececc27f662c43d96e87736616f2aa3cc Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Mon, 25 Mar 2019 09:41:21 +0100
+Subject: [PATCH] device-types: base: detect TFTP ERROR: File not found
+
+When runnning a uboot job, our lab hit this issue:
+Filename '1`0/tftp-deploy-7ong68s3/kernel/uImage'.
+Load address: 0x1080000
+Loading: *T
+TFTP error: 'File not found' (1)
+Not retrying...
+
+But this error was not catched by LAVA and so the job continued
+and started with an empty kernel up to a "wait for prompt timed out"
+error.
+
+This patch adds a way to detect this infrastructure error.
+---
+ lava_scheduler_app/tests/device-types/base.jinja2 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lava_scheduler_app/tests/device-types/base.jinja2 b/lava_scheduler_app/tests/device-types/base.jinja2
+index 9979db97b..d99676d62 100644
+--- a/lava_scheduler_app/tests/device-types/base.jinja2
++++ b/lava_scheduler_app/tests/device-types/base.jinja2
+@@ -98,6 +98,7 @@ constants:
+       - 'Retry count exceeded'
+       - 'Retry time exceeded; starting again'
+       - 'ERROR: The remote end did not respond in time.'
++      - 'File not found'
+ {% if uboot_extra_error_message %}
+       - '{{ uboot_extra_error_message }}'
+ {% endif %}
+-- 
+2.19.2
+
