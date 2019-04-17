@@ -1,0 +1,109 @@
+From c3f8993fe2c465f77678b54995f09648e68e9f84 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Thu, 14 Mar 2019 16:18:42 +0100
+Subject: [PATCH] Add NBD support to grub
+
+Boards booting with grub cannot currently use NBD for storing their
+rootfs.
+This patch adds support for NBD when booting with grub method.
+
+Signed-off-by: Corentin LABBE <clabbe@baylibre.com>
+---
+ .../tests/device-types/base-grub.jinja2       | 12 +++++
+ .../tests/sample_jobs/grub-nbd.yaml           | 54 +++++++++++++++++++
+ 2 files changed, 66 insertions(+)
+ create mode 100644 lava_scheduler_app/tests/sample_jobs/grub-nbd.yaml
+
+diff --git a/lava_scheduler_app/tests/device-types/base-grub.jinja2 b/lava_scheduler_app/tests/device-types/base-grub.jinja2
+index c2e1a10f3..5f5dba9b5 100644
+--- a/lava_scheduler_app/tests/device-types/base-grub.jinja2
++++ b/lava_scheduler_app/tests/device-types/base-grub.jinja2
+@@ -64,6 +64,7 @@ actions:
+       serial:
+     methods:
+       tftp:
++      nbd:
+   boot:
+     connections:
+       serial:
+@@ -87,6 +88,17 @@ actions:
+           - clear
+           - boot
+ {% endblock ramdisk_commands %}
++        nbd:
++          commands:
++          - clear
++          - insmod linux
++          - clear
++          - insmod tftp
++          - clear
++          - 'linux (tftp,{SERVER_IP})/{KERNEL} {{ console_args }} {{ base_ip_args }} {{ base_nbdroot_args }} rw {{ base_kernel_args }}'
++          - clear
++          - initrd (tftp,{SERVER_IP})/{RAMDISK}
++          - boot
+         nfs:
+           commands:
+ {% block nfs_commands %}
+diff --git a/lava_scheduler_app/tests/sample_jobs/grub-nbd.yaml b/lava_scheduler_app/tests/sample_jobs/grub-nbd.yaml
+new file mode 100644
+index 000000000..8456e2172
+--- /dev/null
++++ b/lava_scheduler_app/tests/sample_jobs/grub-nbd.yaml
+@@ -0,0 +1,54 @@
++device_type: upsquare
++job_name: upsquare-nbd-boot
++
++timeouts:
++  job:
++    minutes: 70
++  action:
++    minutes: 15
++  connection:
++    minutes: 5
++  connections:
++    lava-test-shell:
++      minutes: 10
++
++priority: medium
++visibility: public
++
++protocols:
++  lava-xnbd:
++    port: auto
++
++actions:
++- deploy:
++    timeout:
++      minutes: 15
++    to: nbd
++    os: oe
++    failure_retry: 2
++    protocols:
++      lava-xnbd:
++      - action: nbd-deploy
++        request: set_port
++    kernel:
++      url: http://example.com//bzImage
++    initrd:
++      url: http://example.com/initramfs-netboot-image-intel-corei7-64.ext4.gz
++      allow_modify: true
++    nbdroot:
++      url: http://example.com/agl-demo-platform-crosssdk-intel-corei7-64.ext4
++
++- boot:
++    timeout:
++      minutes: 10
++    method: grub
++    prompts:
++      - '/ #'
++
++    auto_login:
++      login_prompt: "login:"
++      username: root
++    commands: nbd
++    transfer_overlay:
++      download_command: wget
++      unpack_command: tar -C / -xvpf
+-- 
+2.19.2
+
