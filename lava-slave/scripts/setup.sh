@@ -177,4 +177,10 @@ if [ -e /dev/cambrionix-03 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-03 &
 fi
 
+# TODO remove hardcoded 10.201.2.5 / 6
+find /root/devices |grep -q hsdk
+if [ $? -eq 0 ];then
+	/usr/local/bin/hsdk.py --name /dev/hsdk-01 --netport 64000 --resetcmd "/usr/local/bin/acme-cli -s 10.201.2.5 reset 6" &
+fi
+
 exit 0
