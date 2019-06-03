@@ -1,7 +1,7 @@
 FROM bitnami/minideb:stretch
 
 RUN apt-get update && apt-get -y install git
-RUN git clone https://github.com/BayLibre/lava-healthchecks-binary.git
+RUN git clone https://github.com/montjoie/lava-healthchecks-binary.git
 
 FROM nginx:mainline-alpine
 
