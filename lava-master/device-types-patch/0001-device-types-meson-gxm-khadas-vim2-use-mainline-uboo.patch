@@ -1,0 +1,25 @@
+From efadf18996b861643b04287d90fdaea3e841d016 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Mon, 10 Jun 2019 12:42:47 +0200
+Subject: [PATCH] device-types: meson-gxm-khadas-vim2 use mainline uboot
+
+uboot mainline support now meson-gxm-khadas-vim2.
+So there is no reason to keep the vendor prompt.
+---
+ .../tests/device-types/meson-gxm-khadas-vim2.jinja2              | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/lava_scheduler_app/tests/device-types/meson-gxm-khadas-vim2.jinja2 b/lava_scheduler_app/tests/device-types/meson-gxm-khadas-vim2.jinja2
+index 2c71f0418..d5d97341f 100644
+--- a/lava_scheduler_app/tests/device-types/meson-gxm-khadas-vim2.jinja2
++++ b/lava_scheduler_app/tests/device-types/meson-gxm-khadas-vim2.jinja2
+@@ -1,6 +1,5 @@
+ {% extends 'meson-gx-common.jinja2' %}
+ 
+ {% set device_type = "meson-gxm-khadas-vim2" %}
+-{% set bootloader_prompt = bootloader_prompt|default('kvim2#') %}
+ {% set interrupt_char = interrupt_char|default('\n') %}
+ {% set interrupt_ctrl_list = ['c'] %}
+-- 
+2.19.2
+
