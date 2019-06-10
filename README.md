@@ -456,7 +456,7 @@ EXample for an upsquare and a dispatcher availlable at 192.168.66.1:
 ## How to host healthchecks
 Healthchecks jobs needs externals ressources (rootfs, images, etc...).
 By default, lava-docker healthchecks uses ones hosted on our github, but this imply usage of external networks and some bandwith.
-For hosting locally healthchecks files, you can set healthcheck_host on a slave for hosting them.
+For hosting locally healthchecks files, you can set host_healthcheck on a slave for hosting them.
 Note that doing that bring some constraints:
 - Since healthchecks jobs are hosted by the master, The healthcheck hostname must be the same accross all slaves.
 - You need to set the base URL on the master via healthcheck_url
@@ -468,7 +468,7 @@ For setting a DNS server, the easiest way is to use dnsmasq and add in /etc/host
 
 Example:
 One master and slave on DC A, and one slave on DC B.
-Both slave need to have healthcheck_host to true and master will have healthcheck_url set to healthcheck:8080
+Both slave need to have host_healthcheck to true and master will have healthcheck_url set to healthcheck:8080
 You have to add a DNS server on both slave with an healthcheck entry.
 
 ## Bugs, Contact
