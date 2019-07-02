@@ -1,38 +1,11 @@
 #!/bin/bash
 
-postgres-ready () {
-  echo "Waiting for lavaserver database to be active"
-  while (( $(ps -ef | grep -v grep | grep postgres | grep lavaserver | wc -l) == 0 ))
-  do
-    echo -n "."
-    sleep 1
-  done
-  echo 
-  echo "[ ok ] LAVA server ready"
-}
+#/setup.sh || exit $?
 
-start () {
-  echo "Starting $1"
-  if (( $(ps -ef | grep -v grep | grep -v add_device | grep -v dispatcher-config | grep "$1" | wc -l) > 0 ))
-  then
-    echo "$1 appears to be running"
-  else
-    service "$1" start
-  fi
-}
+cp /setup.sh /root/entrypoint.d/
+# TODO remove this when the PR is used in any release
+sed -i 's,^for f in /root/entrypoint.d/.*,for f in $(find /root/entrypoint.d/ -type f); do,' /root/entrypoint.sh
 
-#remove lava-pid files incase the image is stored without first stopping the services
-rm -f /var/run/lava-*.pid 2> /dev/null
+/root/entrypoint.sh
+exit 0
 
-/etc/init.d/postgresql start
-
-/setup.sh || exit $?
-
-start apache2 || exit $?
-start lava-logs || exit $?
-start lava-master || exit $?
-start lava-coordinator || exit $?
-start lava-server-gunicorn || exit $?
-
-postgres-ready
-service apache2 reload #added after the website not running a few times on boot

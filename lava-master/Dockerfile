@@ -1,4 +1,7 @@
-FROM baylibre/lava-master-base:2019.03_stretch
+FROM lavasoftware/lava-server:2019.06
+
+RUN apt-get update
+RUN apt-get -y install lava-dispatcher sudo
 
 COPY backup /root/backup/
 
