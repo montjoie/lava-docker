@@ -154,6 +154,12 @@ fi
 if [ -e /dev/cambrionix-01 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-01 &
 fi
+if [ -e /dev/cambrionix-02 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-02 &
+fi
+if [ -e /dev/cambrionix-03 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-03 &
+fi
 
 # TODO remove hardcoded 10.201.2.5 / 6
 find /root/devices |grep -q hsdk
