@@ -23,9 +23,20 @@ while getopts "fn:" opt; do
 done
 
 if [ "$LXC_NAME" ]; then
-    umount /var/lib/lxc/${LXC_NAME}/rootfs/*
+    echo "DEBUG: cache APT content"
+    mkdir -p /var/lib/lxc/cache
+    rsync -a /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/ /var/lib/lxc/cache/
+    # Filter a second time on ${LXC_NAME}/rootfs since lsof coufound all /dev 
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/dev | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs kill
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/sys | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs kill
+    sleep 2
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/dev | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs kill -9
+    lsof /var/lib/lxc/${LXC_NAME}/rootfs/sys | grep "${LXC_NAME}/rootfs" | sed 's,[[:space:]][[:space:]]*, ,g' | cut -d' ' -f2 | xargs kill -9
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/dev
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/proc
+    umount /var/lib/lxc/${LXC_NAME}/rootfs/sys
     # Remove lxc rootfs directory if any
-    rm -rf /var/lib/lxc/${LXC_NAME}
+    rm --one-file-system -rf /var/lib/lxc/${LXC_NAME}
     # echo container destroyed message
     echo "Destroyed container $LXC_NAME"
     exit 0

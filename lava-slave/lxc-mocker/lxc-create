@@ -64,7 +64,7 @@ if [ -z "$LXC_NAME" ];then
 fi
 
 echo "DEBUG: release $RELEASE"
-apt-get -y install debootstrap rsync || exit $?
+apt-get -y install debootstrap rsync lsof || exit $?
 
 mkdir -p /var/lib/lxc/${LXC_NAME}/rootfs || exit $?
 
