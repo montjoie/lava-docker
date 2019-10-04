@@ -12,7 +12,7 @@ def disable_port(port):
     if args.debug:
         print("Disable port %d" % port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(("127.0.0.1", args.netport))
+    sock.connect(("127.0.0.1", int(args.netport)))
     sock.send("disable %d" % port)
     sock.recv(1024)
     sock.close()
@@ -33,16 +33,19 @@ def disable_port(port):
             print("==============")
         res = x.split(" ")
         if res[0] != 'state':
-            print("Unexpected")
+            print("Unexpected: cannot find state")
             print(res)
             return 1
-        if res[4] != 'R':
-            print("Unexpected")
-            print(res)
-            return 1
+        off = 4
+        if res[off] != 'R':
+            off = 3
+            if res[off] != 'R':
+                print("Unexpected: cannot find R")
+                print(res)
+                return 1
         if args.debug:
             print(res)
-        if res[6] == 'O,':
+        if res[off + 2] == 'O,':
             break
         time.sleep(0.5)
         timeout = timeout + 1
@@ -53,7 +56,7 @@ def enable_port(port):
     if args.debug:
         print("Enable port %d" % args.port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect(("127.0.0.1", args.netport))
+    sock.connect(("127.0.0.1", int(args.netport)))
     sock.send("enable %d" % port)
     sock.recv(1024)
     sock.close()
@@ -69,20 +72,23 @@ def enable_port(port):
             print("==============")
         res = x.split(" ")
         if res[0] != 'state':
-            print("Unexpected")
+            print("Unexpected: cannot find state")
             print(res)
             return 1
-        if res[4] != 'R':
-            print("Unexpected")
-            print(res)
-            return 1
+        off = 4
+        if res[off] != 'R':
+            off = 2
+            if res[off] != 'R':
+                print("Unexpected cannot find R")
+                print(res)
+                return 1
         if args.debug:
             print(res)
         # port charging
-        if res[6] == 'C,':
+        if res[off + 2] == 'C,':
             break
         # port profiling
-        if res[6] == 'P,':
+        if res[off + 2] == 'P,':
             break
         time.sleep(0.5)
         timeout = timeout + 1
@@ -96,11 +102,25 @@ def cambrionix_daemon():
     ser.write(b"en_profile 3 0\r\n")
     ser.write(b"en_profile 4 0\r\n")
     ser.write(b"en_profile 5 0\r\n")
-    for port in range(1,9):
-        if os.path.exists("%s/port%d" % (args.statedir, port)):
-            print("Keep port %d enabled" % port)
-        else:
-            ser.write(b"mode o %d\r\n" % port)
+    if args.startc:
+        for port in args.startc.split(","):
+            print("DEBUG: Start port %d" % int(port))
+            ser.write(b"mode c %d\r\n" % int(port))
+    if args.starts:
+        for port in args.starts.split(","):
+            print("DEBUG: Start port %d" % int(port))
+            ser.write(b"mode s %d\r\n" % int(port))
+    if args.startoff:
+        for port in args.startoff.split(","):
+            print("DEBUG: Stop port %d" % int(port))
+            ser.write(b"mode o %d\r\n" % int(port))
+    if not args.startc and not args.startoff and not args.starts:
+        print("DEBUG: old behaviour")
+        for port in range(1,9):
+            if os.path.exists("%s/port%d" % (args.statedir, port)):
+                print("Keep port %d enabled" % port)
+            else:
+                ser.write(b"mode o %d\r\n" % port)
     x = ser.read(1024)
     if args.debug:
         print(x)
@@ -108,7 +128,7 @@ def cambrionix_daemon():
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     host = socket.gethostname()
-    s.bind(("0.0.0.0", args.netport))
+    s.bind(("0.0.0.0", int(args.netport)))
     s.setblocking(0)
 
     s.listen(5)
@@ -184,15 +204,18 @@ def cambrionix_daemon():
                     x = ser.read(1024)
                     res = x.split(" ")
                     if res[0] != 'state':
-                        print("Unexpected")
+                        print("Unexpected state")
                         print(res)
                         continue
-                    if res[4] != 'R':
-                        print("Unexpected")
-                        print(res)
-                        continue
+                    off = 4
+                    if res[off] != 'R':
+                        off = 3
+                        if res[off] != 'R':
+                            print("Unexpected R")
+                            print(res)
+                            continue
                     # port charging
-                    if res[6] == 'C,' and cmds[client] == "enable":
+                    if res[off + 2] == 'C,' and cmds[client] == "enable":
                         fstate = open("%s/port%s" % (args.statedir, ports[client]), "w")
                         fstate.write("enabled")
                         fstate.close()
@@ -202,7 +225,7 @@ def cambrionix_daemon():
                         client.close()
                         clients.remove(client)
                         continue
-                    if res[6] == 'O,' and cmds[client] == "disable":
+                    if res[off + 2] == 'O,' and cmds[client] == "disable":
                         if os.path.exists("%s/port%s" % (args.statedir, ports[client])):
                             os.remove("%s/port%s" % (args.statedir, ports[client]))
                         else:
@@ -268,11 +291,17 @@ parser.add_argument("--daemon", "-D", help="increase debug level", action="store
 parser.add_argument("--netport", help="Nerwork port", default=12346)
 parser.add_argument("--counterdir", type=str, help="Where to store stats")
 parser.add_argument("--statedir", type=str, help="Where to store port state", default="/var/cambrionix/")
+parser.add_argument("--startc", type=str, help="Port list to enable(charge) at start (comma separated)")
+parser.add_argument("--starts", type=str, help="Port list to enable(sync) at start (comma separated)")
+parser.add_argument("--startoff", type=str, help="Port list to disable at start (comma separated)")
 
 args = parser.parse_args()
 
 if not os.path.exists(args.statedir):
-    os.mkdir(args.statedir)
+    try:
+        os.mkdir(args.statedir)
+    except OSError as e:
+        print(e)
 
 timeoutmax=60
 if args.timeout:

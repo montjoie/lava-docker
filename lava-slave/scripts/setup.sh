@@ -171,14 +171,21 @@ if [ -e /etc/lava-dispatcher/certificates.d/$(hostname).key ];then
 	sed -i "s,.*MASTER_CERT=.*,MASTER_CERT=\"--master-cert /etc/lava-dispatcher/certificates.d/$LAVA_MASTER.key\"," /etc/lava-dispatcher/lava-slave
 fi
 
+# cambrionix potato2
 if [ -e /dev/cambrionix-01 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-01 &
 fi
+# cambrionix LABtest
 if [ -e /dev/cambrionix-02 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-02 &
 fi
+# cambrionix potato3
 if [ -e /dev/cambrionix-03 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix-03 &
+fi
+# cambrionix LABtest
+if [ -e /dev/cambrionix16-01 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix16-01 --starts 1,2,3,4,5,6,7,8 --startoff 9,10,11,12,13,14,15,16 --netport 64002 &
 fi
 
 # TODO remove hardcoded 10.201.2.5 / 6
