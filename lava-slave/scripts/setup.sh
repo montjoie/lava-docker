@@ -187,6 +187,14 @@ fi
 if [ -e /dev/cambrionix16-01 ];then
 	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix16-01 --starts 1,2,3,4,5,6,7,8 --startoff 9,10,11,12,13,14,15,16 --netport 64002 &
 fi
+# cambrionix potato4
+if [ -e /dev/cambrionix16-02 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix16-02 --startoff 1,2,3,4,5,6,7,8 --starts 9,10,11,12,13,14,15,16  &
+fi
+# cambrionix potato
+if [ -e /dev/cambrionix16-03 ];then
+	/usr/local/bin/pycambrionyx.py --daemon --name /dev/cambrionix16-03 --starts 1,2,3,4,5,6,7,8 --startoff 9,10,11,12,13,14,15,16  &
+fi
 
 # TODO remove hardcoded 10.201.2.5 / 6
 find /root/devices |grep -q hsdk

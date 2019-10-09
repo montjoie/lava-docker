@@ -17,39 +17,15 @@ def disable_port(port):
     sock.recv(1024)
     sock.close()
     return 0
-    ser.write(b"mode o %d\r\n" % port)
-    time.sleep(0.200)
-    x = ser.read(1024)
-    timeout = 0
+
+def senable_port(port):
     if args.debug:
-        print("=========")
-        ser.write(b"state\r\n")
-        x = ser.read(1024)
-        print(x)
-    while timeout < 10:
-        ser.write(b"state %d\r\n" % port)
-        x = ser.read(1024)
-        if args.debug:
-            print("==============")
-        res = x.split(" ")
-        if res[0] != 'state':
-            print("Unexpected: cannot find state")
-            print(res)
-            return 1
-        off = 4
-        if res[off] != 'R':
-            off = 3
-            if res[off] != 'R':
-                print("Unexpected: cannot find R")
-                print(res)
-                return 1
-        if args.debug:
-            print(res)
-        if res[off + 2] == 'O,':
-            break
-        time.sleep(0.5)
-        timeout = timeout + 1
-        print("Wait for port disabled %d/10" % timeout)
+        print("SEnable port %d" % args.port)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(("127.0.0.1", int(args.netport)))
+    sock.send("senable %d" % port)
+    sock.recv(1024)
+    sock.close()
     return 0
 
 def enable_port(port):
@@ -60,39 +36,6 @@ def enable_port(port):
     sock.send("enable %d" % port)
     sock.recv(1024)
     sock.close()
-    return 0
-    ser.write(b"mode c %d 2\r\n" % args.port)
-    time.sleep(0.250)
-    x = ser.read(1024)
-    timeout = 0
-    while timeout < 10:
-        ser.write(b"state %d\r\n" % port)
-        x = ser.read(1024)
-        if args.debug:
-            print("==============")
-        res = x.split(" ")
-        if res[0] != 'state':
-            print("Unexpected: cannot find state")
-            print(res)
-            return 1
-        off = 4
-        if res[off] != 'R':
-            off = 2
-            if res[off] != 'R':
-                print("Unexpected cannot find R")
-                print(res)
-                return 1
-        if args.debug:
-            print(res)
-        # port charging
-        if res[off + 2] == 'C,':
-            break
-        # port profiling
-        if res[off + 2] == 'P,':
-            break
-        time.sleep(0.5)
-        timeout = timeout + 1
-        print("Wait for port enabled %d/10" % timeout)
     return 0
 
 def cambrionix_daemon():
@@ -225,6 +168,16 @@ def cambrionix_daemon():
                         client.close()
                         clients.remove(client)
                         continue
+                    if res[off + 2] == 'S,' and cmds[client] == "senable":
+                        fstate = open("%s/port%s" % (args.statedir, ports[client]), "w")
+                        fstate.write("enabled")
+                        fstate.close()
+                        del cmds[client]
+                        del ports[client]
+                        client.send("Done")
+                        client.close()
+                        clients.remove(client)
+                        continue
                     if res[off + 2] == 'O,' and cmds[client] == "disable":
                         if os.path.exists("%s/port%s" % (args.statedir, ports[client])):
                             os.remove("%s/port%s" % (args.statedir, ports[client]))
@@ -258,6 +211,11 @@ def cambrionix_daemon():
                         ports[client] = bcmds[1]
                         ser.write(b"mode c %s 2\r\n" % bcmds[1])
                         continue
+                    if bcmds[0] == "senable":
+                        cmds[client] = bcmds[0]
+                        ports[client] = bcmds[1]
+                        ser.write(b"mode s %s 2\r\n" % bcmds[1])
+                        continue
                     if bcmds[0] == "health":
                         ser.write(b"health\r\n")
                         x = ser.read(1024)
@@ -285,7 +243,9 @@ parser.add_argument("--port", "-p", type=int, help="Cambrionix port to control")
 parser.add_argument("--timeout", "-t", type=int, help="timeout")
 parser.add_argument("--off", action="store_true", help="turn off port")
 parser.add_argument("--on", action="store_true", help="turn on prot")
+parser.add_argument("--son", action="store_true", help="turn on prot")
 parser.add_argument("--reset", action="store_true", help="reset port")
+parser.add_argument("--sreset", action="store_true", help="reset port")
 parser.add_argument("--debug", "-d", help="increase debug level", action="store_true")
 parser.add_argument("--daemon", "-D", help="increase debug level", action="store_true")
 parser.add_argument("--netport", help="Nerwork port", default=12346)
@@ -314,55 +274,16 @@ if args.off:
     disable_port(args.port)
 if args.on:
     enable_port(args.port)
+if args.son:
+    senable_port(args.port)
 if args.reset:
     disable_port(args.port)
     enable_port(args.port)
+if args.sreset:
+    disable_port(args.port)
+    senable_port(args.port)
 
 sys.exit(0)
-lockdir="/tmp/cambrionix.lock"
-ret = 1
-while ret != 0:
-    timeout = 0
-    while os.path.exists(lockdir):
-        print("DEBUG: wait for lock %d/%d" % (timeout, timeoutmax))
-        time.sleep(1)
-        timeout = timeout + 1
-        if timeout > timeoutmax:
-            print("ERROR: fail to lock")
-            sys.exit(1)
-    try:
-        os.mkdir(lockdir)
-        ret = 0
-    except OSError:
-        print("ERROR: mkdir")
-
-ser = serial.Serial(args.name, 115200, timeout=1)
-
-if args.off:
-    disable_port(args.port)
-if args.on:
-    enable_port(args.port)
-if args.reset:
-    disable_port(args.port)
-    enable_port(args.port)
-#if args.state:
-#    print_state()
-
-ser.close()
-os.rmdir(lockdir)
-sys.exit(0)
-
-print("=========")
-ser.write(b"state\r\n")
-x = ser.read(1024)
-print(x)
-ser.write(b"health\r\n")
-x = ser.read(1024)
-print(x)
-ser.write(b"id\r\n")
-x = ser.read(4096)
-print(x)
-ser.close()
 
 # doc
 
