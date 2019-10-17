@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import serial
 import argparse
@@ -12,9 +12,11 @@ def disable_port(port):
     if args.debug:
         print("Disable port %d" % port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(30)
     sock.connect(("127.0.0.1", int(args.netport)))
-    sock.send("disable %d" % port)
-    sock.recv(1024)
+    sock.send(b"disable %d" % port)
+    res = sock.recv(1024)
+    print(res.decode("UTF8"))
     sock.close()
     return 0
 
@@ -22,9 +24,11 @@ def senable_port(port):
     if args.debug:
         print("SEnable port %d" % args.port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(30)
     sock.connect(("127.0.0.1", int(args.netport)))
-    sock.send("senable %d" % port)
-    sock.recv(1024)
+    sock.send(b"senable %d" % port)
+    res = sock.recv(1024)
+    print(res.decode("UTF8"))
     sock.close()
     return 0
 
@@ -32,9 +36,11 @@ def enable_port(port):
     if args.debug:
         print("Enable port %d" % args.port)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(30)
     sock.connect(("127.0.0.1", int(args.netport)))
-    sock.send("enable %d" % port)
-    sock.recv(1024)
+    sock.send(b"enable %d" % port)
+    res = sock.recv(1024)
+    print(res.decode("UTF8"))
     sock.close()
     return 0
 
@@ -84,7 +90,7 @@ def cambrionix_daemon():
             ser.write(b"health\r\n")
             x = ser.read(1024)
             fcounter = open("%s/counters" % args.counterdir, "w")
-            for hline in x.splitlines():
+            for hline in x.decode('UTF8').splitlines():
                 print("CHECK: %s" % hline)
                 if re.search("5V Now", hline):
                     v = re.sub("5V Now.* ", "", hline)
@@ -108,7 +114,7 @@ def cambrionix_daemon():
             time.sleep(1.00)
             ser.write('\x03'.encode())
             x = ser.read(1024)
-            for hline in x.splitlines():
+            for hline in x.decode('UTF8').splitlines():
                 #print("CHECKma: %s" % hline)
                 if re.search("^00", hline):
                     toks = hline.split(", ")
@@ -143,20 +149,32 @@ def cambrionix_daemon():
             for client in clients:
                 # check for already set cmds
                 if client in cmds:
-                    ser.write(b"state %s\r\n" % ports[client])
+                    ser.write(b"state %s\r\n" % ports[client].encode())
                     x = ser.read(1024)
-                    res = x.split(" ")
+                    res = x.decode('UTF8').replace("  ", " ").split(" ")
                     if res[0] != 'state':
-                        print("Unexpected state")
+                        print("ERROR: Unexpected state")
                         print(res)
+                        del cmds[client]
+                        del ports[client]
+                        client.send(b"FAIL: cannot find state\n")
+                        client.close()
+                        clients.remove(client)
                         continue
                     off = 4
                     if res[off] != 'R':
                         off = 3
                         if res[off] != 'R':
-                            print("Unexpected R")
-                            print(res)
-                            continue
+                            off = 5
+                            if res[off] != 'R':
+                                print("Unexpected R")
+                                print(res)
+                                del cmds[client]
+                                del ports[client]
+                                client.send(b"FAIL: cannot find state\n")
+                                client.close()
+                                clients.remove(client)
+                                continue
                     # port charging
                     if res[off + 2] == 'C,' and cmds[client] == "enable":
                         fstate = open("%s/port%s" % (args.statedir, ports[client]), "w")
@@ -164,7 +182,7 @@ def cambrionix_daemon():
                         fstate.close()
                         del cmds[client]
                         del ports[client]
-                        client.send("Done")
+                        client.send(b"Done\n")
                         client.close()
                         clients.remove(client)
                         continue
@@ -174,7 +192,7 @@ def cambrionix_daemon():
                         fstate.close()
                         del cmds[client]
                         del ports[client]
-                        client.send("Done")
+                        client.send(b"Done\n")
                         client.close()
                         clients.remove(client)
                         continue
@@ -185,17 +203,17 @@ def cambrionix_daemon():
                             print("WARN: disable without statefile")
                         del cmds[client]
                         del ports[client]
-                        client.send("Done")
+                        client.send(b"Done\n")
                         client.close()
                         clients.remove(client)
                         continue
                     if args.debug:
-                        print("WAit more")
+                        print("Wait more")
                     continue
                 try:
                     buf = client.recv(1024)
                     print(buf)
-                    bcmds = buf.rstrip().split(" ")
+                    bcmds = buf.decode('UTF-8').rstrip().split(" ")
                     if bcmds[0] == "quit":
                         client.close()
                         clients.remove(c)
@@ -204,17 +222,17 @@ def cambrionix_daemon():
                     if bcmds[0] == "disable":
                         cmds[client] = bcmds[0]
                         ports[client] = bcmds[1]
-                        ser.write(b"mode o %s\r\n" % bcmds[1])
+                        ser.write(b"mode o %s\r\n" % bcmds[1].encode())
                         continue
                     if bcmds[0] == "enable":
                         cmds[client] = bcmds[0]
                         ports[client] = bcmds[1]
-                        ser.write(b"mode c %s 2\r\n" % bcmds[1])
+                        ser.write(b"mode c %s 2\r\n" % bcmds[1].encode())
                         continue
                     if bcmds[0] == "senable":
                         cmds[client] = bcmds[0]
                         ports[client] = bcmds[1]
-                        ser.write(b"mode s %s 2\r\n" % bcmds[1])
+                        ser.write(b"mode s %s 2\r\n" % bcmds[1].encode())
                         continue
                     if bcmds[0] == "health":
                         ser.write(b"health\r\n")
@@ -225,7 +243,7 @@ def cambrionix_daemon():
                         client.close()
                         clients.remove(client)
                         continue
-                    client.send('Wrong command')
+                    client.send(b'Wrong command\n')
                     client.close()
                     clients.remove(client)
                 except socket.error:
