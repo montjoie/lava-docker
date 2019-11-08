@@ -1,0 +1,35 @@
+From bec5b45578812f391d52b0295f923c417ae4cfd2 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 8 Nov 2019 14:40:35 +0100
+Subject: [PATCH] schema: Add missing parameters
+
+This patch adds missing parameters for context:
+- no_kvm
+- custom_kernel_args
+---
+ lava_common/schemas/__init__.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lava_common/schemas/__init__.py b/lava_common/schemas/__init__.py
+index d77df1a0d..1b9bbcb90 100644
+--- a/lava_common/schemas/__init__.py
++++ b/lava_common/schemas/__init__.py
+@@ -55,6 +55,7 @@ CONTEXT_VARIABLES = [
+     "model",
+     "monitor",
+     "netdevice",
++    "no_kvm",
+     "serial",
+     "vga",
+     # u-boot variables
+@@ -71,6 +72,7 @@ CONTEXT_VARIABLES = [
+     "boot_character_delay",
+     "bootloader_prompt",
+     "console_device",
++    "custom_kernel_args",
+     "extra_kernel_args",
+     "extra_nfsroot_args",
+     "kernel_loglevel",
+-- 
+2.21.0
+
