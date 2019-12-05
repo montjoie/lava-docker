@@ -33,7 +33,8 @@ while getopts "qt:n:" opt; do
     esac
 done
 
-RELEASE="stretch"
+MIRROR=""
+RELEASE="buster"
 while [ $# -ge 1 ]
 do
 	case $1 in
@@ -50,6 +51,20 @@ do
 		echo "DEBUG: set release to $1"
 		RELEASE="$1"
 		shift
+	;;
+	-t)
+		shift
+		case $1 in
+		debian)
+		;;
+		ubuntu)
+			MIRROR="http://mirrors.online.net/ubuntu"
+		;;
+		*)
+			echo "ERROR: unknown template $1"
+			shift
+		;;
+		esac
 	;;
 	*)
 		echo "DEBUG: skip $1"
@@ -74,8 +89,7 @@ if [ -e /var/lib/lxc/cache/ ];then
 	rsync -a /var/lib/lxc/cache/ /var/lib/lxc/${LXC_NAME}/rootfs/var/cache/apt/archives/
 fi
 
-#TODO change stretch
-debootstrap --variant=minbase $RELEASE /var/lib/lxc/${LXC_NAME}/rootfs || exit $?
+debootstrap --variant=minbase $RELEASE /var/lib/lxc/${LXC_NAME}/rootfs $MIRROR || exit $?
 
 if [ "$PACKAGES" ] && [ "$QUIET" ]; then
     DEBIAN_FRONTEND=noninteractive chroot /var/lib/lxc/${LXC_NAME}/rootfs apt-get -q update > /dev/null 2>&1
