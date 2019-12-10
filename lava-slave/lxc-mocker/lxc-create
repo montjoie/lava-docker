@@ -58,7 +58,7 @@ do
 		debian)
 		;;
 		ubuntu)
-			MIRROR="http://mirrors.online.net/ubuntu"
+			MIRROR="http://mirror.ubuntu.ikoula.com/ubuntu/"
 		;;
 		*)
 			echo "ERROR: unknown template $1"
