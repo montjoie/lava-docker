@@ -101,6 +101,8 @@ RUN cp /root/lab-tools/lxc-mocker/* /usr/bin/
 RUN chmod +x /usr/bin/lxc-*
 RUN cp /root/lab-tools/amaz.sh /usr/bin/
 RUN chmod +x /usr/bin/amaz.sh
+RUN cp /root/lab-tools/hsdk.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/hsdk.py
 
 EXPOSE 69/udp 80
 
