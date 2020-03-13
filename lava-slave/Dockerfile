@@ -73,7 +73,7 @@ RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
 COPY scripts/crelay_power /usr/bin/
 RUN chmod +x /usr/bin/crelay_power
 
-RUN apt-get -y install python3-serial python-serial lava-lxc-mocker uhubctl
+RUN apt-get -y install python3-serial python-serial lava-lxc-mocker uhubctl debootstrap
 RUN cd /root/ && git clone https://github.com/montjoie/lab-tools.git
 RUN cp /root/lab-tools/py* /usr/local/bin/
 RUN chmod 755 /usr/local/bin/pycambrionyx.py /usr/local/bin/pyser2net.py
@@ -83,6 +83,7 @@ RUN cp /root/lab-tools/amaz.sh /usr/bin/
 RUN chmod +x /usr/bin/amaz.sh
 RUN cp /root/lab-tools/hsdk.py /usr/local/bin/
 RUN chmod +x /usr/local/bin/hsdk.py
+RUN patch -p1 < /root/lab-tools/lxc-mocker/debootstrap.patch
 
 EXPOSE 69/udp 80
 
