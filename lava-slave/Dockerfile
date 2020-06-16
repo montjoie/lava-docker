@@ -104,6 +104,9 @@ RUN chmod +x /usr/bin/amaz.sh
 RUN cp /root/lab-tools/hsdk.py /usr/local/bin/
 RUN chmod +x /usr/local/bin/hsdk.py
 RUN patch -p1 < /root/lab-tools/lxc-mocker/debootstrap.patch
+RUN dpkg -i /root/lab-tools/sispmctl/*deb
+RUN cp /root/lab-tools/sispmctl/power-sispmctl.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/power-sispmctl.sh
 
 EXPOSE 69/udp 80
 
