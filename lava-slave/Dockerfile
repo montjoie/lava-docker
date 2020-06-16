@@ -73,7 +73,8 @@ RUN cd crelay/src && make && cp crelay /usr/bin/ && chmod +x /usr/bin/crelay
 COPY scripts/crelay_power /usr/bin/
 RUN chmod +x /usr/bin/crelay_power
 
-RUN apt-get -y install python3-serial python-serial lava-lxc-mocker uhubctl debootstrap
+# libusb-0.1-4 for sispmctl
+RUN apt-get -y install python3-serial python-serial lava-lxc-mocker uhubctl debootstrap libusb-0.1-4
 RUN cd /root/ && git clone https://github.com/montjoie/lab-tools.git
 RUN cp /root/lab-tools/py* /usr/local/bin/
 RUN chmod 755 /usr/local/bin/pycambrionyx.py /usr/local/bin/pyser2net.py
@@ -84,6 +85,10 @@ RUN chmod +x /usr/bin/amaz.sh
 RUN cp /root/lab-tools/hsdk.py /usr/local/bin/
 RUN chmod +x /usr/local/bin/hsdk.py
 RUN patch -p1 < /root/lab-tools/lxc-mocker/debootstrap.patch
+# sispmctl work only on x86
+RUN grep -qiE intel /proc/cpuinfo && dpkg -i /root/lab-tools/sispmctl/*deb || exit 0
+RUN cp /root/lab-tools/sispmctl/power-sispmctl.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/power-sispmctl.sh
 
 EXPOSE 69/udp 80
 
