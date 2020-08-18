@@ -1,0 +1,55 @@
+commit dc4727eb1f319303aa1f953ace2a36543857611b
+Author: Corentin LABBE <clabbe@baylibre.com>
+Date:   Thu Jul 2 11:05:45 2020 +0200
+
+    device-types: qemu: add support fo riscV
+    
+    qemu support riscV virtual machines, so let's permit LAVA to boot them.
+    Tested with a riscV kernelCI build for riscv64.
+    
+    Signed-off-by: Corentin LABBE <clabbe@baylibre.com>
+
+diff --git a/etc/dispatcher-config/device-types/qemu.jinja2 b/etc/dispatcher-config/device-types/qemu.jinja2
+index c460ba7aa..cfd96a513 100644
+--- a/etc/dispatcher-config/device-types/qemu.jinja2
++++ b/etc/dispatcher-config/device-types/qemu.jinja2
+@@ -31,6 +31,7 @@ available_architectures:
+ - nios2
+ - ppc
+ - ppc64
++- riscv64
+ - sparc
+ - sparc64
+ {% for arch in qemu_misc_architectures %}
+@@ -82,6 +83,8 @@ actions:
+             qemu-system-ppc
+ {% elif arch == 'ppc64' %}
+             qemu-system-ppc64
++{% elif arch == 'riscv64' %}
++            qemu-system-riscv64
+ {% elif arch == 'sparc' %}
+             qemu-system-sparc
+ {% elif arch == 'sparc64' %}
+@@ -123,6 +126,10 @@ actions:
+ {% if arch == 'ppc64' %}
+           - -machine {{ machine|default('pseries') }}
+ {% endif %}
++{% if arch == 'riscv64' %}
++          - -machine {{ machine|default('virt') }}
++          - -cpu {{ cpu|default('rv64') }}
++{% endif %}
+ {% if arch == 'sparc' %}
+           - -machine {{ machine|default('SS-5') }}
+ {% endif %}
+diff --git a/tests/lava_scheduler_app/test_qemu_templates.py b/tests/lava_scheduler_app/test_qemu_templates.py
+index 4c54613ab..b6c1d63e4 100644
+--- a/tests/lava_scheduler_app/test_qemu_templates.py
++++ b/tests/lava_scheduler_app/test_qemu_templates.py
+@@ -314,6 +314,7 @@ class TestQemuTemplates(BaseTemplate.BaseTemplateCases):
+                     "or32",
+                     "ppc",
+                     "ppc64",
++                    "riscv64",
+                     "s390x",
+                     "sh4",
+                     "sh4eb",
