@@ -9,6 +9,10 @@ cd $DEVTYPE_PATH
 for patch in $(ls /root/device-types-patch/*patch)
 do
 	echo "DEBUG: patch with $patch"
+	#cp $patch $patch.orig
 	sed -i 's,lava_scheduler_app/tests/device-types/,,' $patch
+	sed -i 's,etc/dispatcher-config/device-types/,,' $patch
+	#diff -u $patch.orig $patch
+	patch -p1 < $patch || exit $?
 done
 chown -R lavaserver:lavaserver $DEVTYPE_PATH
