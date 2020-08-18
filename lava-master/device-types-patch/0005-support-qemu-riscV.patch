@@ -41,15 +41,3 @@ index c460ba7aa..cfd96a513 100644
  {% if arch == 'sparc' %}
            - -machine {{ machine|default('SS-5') }}
  {% endif %}
-diff --git a/tests/lava_scheduler_app/test_qemu_templates.py b/tests/lava_scheduler_app/test_qemu_templates.py
-index 4c54613ab..b6c1d63e4 100644
---- a/tests/lava_scheduler_app/test_qemu_templates.py
-+++ b/tests/lava_scheduler_app/test_qemu_templates.py
-@@ -314,6 +314,7 @@ class TestQemuTemplates(BaseTemplate.BaseTemplateCases):
-                     "or32",
-                     "ppc",
-                     "ppc64",
-+                    "riscv64",
-                     "s390x",
-                     "sh4",
-                     "sh4eb",
