@@ -1,0 +1,28 @@
+From 06388810b5f24e596fd81bb8b3872a730f8852c9 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Thu, 21 Jan 2021 20:51:34 +0000
+Subject: [PATCH] qemu: permit to set machine on m68k
+
+When doing m68k qemu jobs, it is impossible to change the machine type.
+Let's fix this.
+---
+ etc/dispatcher-config/device-types/qemu.jinja2 | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/etc/dispatcher-config/device-types/qemu.jinja2 b/etc/dispatcher-config/device-types/qemu.jinja2
+index b1b499468..8f91a7587 100644
+--- a/etc/dispatcher-config/device-types/qemu.jinja2
++++ b/etc/dispatcher-config/device-types/qemu.jinja2
+@@ -117,6 +117,9 @@ actions:
+ {% if arch == 'hppa' %}
+           - -machine {{ machine|default('hppa') }}
+ {% endif %}
++{% if arch == 'm68k' %}
++          - -machine {{ machine|default('mcf5208evb') }}
++{% endif %}
+ {% if arch == 'mips' %}
+           - -machine {{ machine|default('malta') }}
+ {% endif %}
+-- 
+2.26.2
+
