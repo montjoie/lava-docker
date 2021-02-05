@@ -1,0 +1,21 @@
+From ebe65ed86aca68cd8f8057bb594d0e2f10999e4c Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 5 Feb 2021 09:10:48 +0000
+Subject: [PATCH] device-types: meson-gxl-s905x-p212 add interrupt char
+
+p212 need and interrupt char to work reliabily.
+---
+ etc/dispatcher-config/device-types/meson-gxl-s905x-p212.jinja2 | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/etc/dispatcher-config/device-types/meson-gxl-s905x-p212.jinja2 b/etc/dispatcher-config/device-types/meson-gxl-s905x-p212.jinja2
+index ce1431e93..045548e06 100644
+--- a/etc/dispatcher-config/device-types/meson-gxl-s905x-p212.jinja2
++++ b/etc/dispatcher-config/device-types/meson-gxl-s905x-p212.jinja2
+@@ -1 +1,3 @@
+ {% extends 'meson-gx-common.jinja2' %}
++
++{% set interrupt_char = interrupt_char|default('\n') %}
+-- 
+2.26.2
+
