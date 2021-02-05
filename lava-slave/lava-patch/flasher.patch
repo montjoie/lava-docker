@@ -1,0 +1,103 @@
+diff --git a/lava_common/schemas/deploy/flasher.py b/lava_common/schemas/deploy/flasher.py
+index c4037d51c..157bbbc4b 100644
+--- a/lava_common/schemas/deploy/flasher.py
++++ b/lava_common/schemas/deploy/flasher.py
+@@ -20,11 +20,19 @@
+ # along
+ # with this program; if not, see <http://www.gnu.org/licenses>.
+ 
+-from voluptuous import Required
++from voluptuous import Optional, Required
+ 
+ from lava_common.schemas import deploy
+ 
+ 
++def flasher_docker():
++    return {Required("image"): str, Optional("binary"): str, Optional("privileged"): bool}
++
++
+ def schema():
+-    base = {Required("to"): "flasher", Required("images"): {str: deploy.url()}}
++    base = {
++        Required("to"): "flasher",
++        Required("images"): {str: deploy.url()},
++        Optional("docker"): flasher_docker(),
++    }
+     return {**deploy.schema(), **base}
+diff --git a/lava_dispatcher/actions/deploy/flasher.py b/lava_dispatcher/actions/deploy/flasher.py
+index 1a5186175..2d7bf6552 100644
+--- a/lava_dispatcher/actions/deploy/flasher.py
++++ b/lava_dispatcher/actions/deploy/flasher.py
+@@ -24,7 +24,9 @@ from lava_dispatcher.actions.deploy.download import DownloaderAction
+ from lava_dispatcher.actions.deploy.environment import DeployDeviceEnvironment
+ from lava_dispatcher.actions.deploy.overlay import OverlayAction
+ from lava_dispatcher.logical import Deployment, RetryAction
++from lava_dispatcher.utils.docker import DockerRun
+ from lava_dispatcher.utils.strings import substitute
++import shlex
+ 
+ 
+ class FlasherRetryAction(RetryAction):
+@@ -106,10 +108,27 @@ class FlasherAction(Action):
+             self.job.device.get("static_info", [])
+         )
+ 
+-        # Run the commands
+-        for cmd in self.commands:
+-            cmds = substitute([cmd], substitutions)
+-            self.run_cmd(cmds[0], error_msg="Unable to flash the device", cwd=self.path)
++        if "docker" in self.parameters:
++            docker = DockerRun(self.parameters["docker"]["image"])
++            docker.interactive()
++            if "privileged" in self.parameters["docker"] and self.parameters["docker"]["privileged"]:
++                docker.privileged()
++            docker.bind_mount(self.path)
++            docker.bind_mount("/dev", "/dev")
++            docker.bind_mount("/sys", "/sys")
++            docker.hostname("lava-flasher")
++            docker.workdir(self.path)
++
++            for cmd in self.commands:
++                cmds = substitute([cmd], substitutions)
++                docker.run(*shlex.split(cmds[0]), action=self)
++        else:
++            # Run the commands
++            for cmd in self.commands:
++                cmds = substitute([cmd], substitutions)
++                self.run_cmd(
++                    cmds[0], error_msg="Unable to flash the device", cwd=self.path
++                )
+ 
+         return connection
+ 
+diff --git a/lava_dispatcher/utils/docker.py b/lava_dispatcher/utils/docker.py
+index 9af88e11b..fb504b674 100644
+--- a/lava_dispatcher/utils/docker.py
++++ b/lava_dispatcher/utils/docker.py
+@@ -34,6 +34,7 @@ class DockerRun:
+         self.__bind_mounts__ = []
+         self.__environment__ = []
+         self.__interactive__ = False
++        self.__privileged__ = False
+         self.__tty__ = False
+         self.__docker_options__ = []
+         self.__docker_run_options__ = []
+@@ -73,6 +74,9 @@ class DockerRun:
+     def interactive(self):
+         self.__interactive__ = True
+ 
++    def privileged(self):
++        self.__privileged__ = True
++
+     def tty(self):
+         self.__tty__ = True
+ 
+@@ -93,6 +97,8 @@ class DockerRun:
+         )
+         if self.__interactive__:
+             cmd.append("--interactive")
++        if self.__privileged__:
++            cmd.append("--privileged")
+         if self.__tty__:
+             cmd.append("--tty")
+         if self.__name__:
