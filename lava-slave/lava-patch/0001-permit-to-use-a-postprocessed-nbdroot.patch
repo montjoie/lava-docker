@@ -1,0 +1,120 @@
+From f8c5a2e398e33952c229ab7512557f6155e7327d Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 8 Jan 2021 12:30:33 +0000
+Subject: [PATCH] permit to use a postprocessed nbdroot
+
+When using a postprocessed nbdroot like:
+actions:
+- deploy:
+    to: downloads
+    postprocess:
+      docker:
+        image: debian:buster
+        steps:
+         - mkdir rootfs
+         - cd rootfs && tar xpf ../rootfs*
+         - mke2fs -d . -m 0 -t ext2 ../rootfs.ext2 1600M
+    images:
+      stage3:
+        url: http://xxx/root.tar.xz
+        compression: xz
+
+- deploy:
+    protocols:
+      lava-xnbd:
+      - action: nbd-deploy
+        request: set_port
+    to: nbd
+    nbdroot:
+      url: downloads://rootfs.ext2
+
+...LAVA fail with a keyerror on nbdroot.
+
+Problem #1:
+This is due that only downloaded files(via class DownloadHandler) ran the spetial "nbdroot register":
+        if "lava-xnbd" in self.parameters and nbdroot:
+            self.parameters["lava-xnbd"]["nbdroot"] = nbdroot
+The solution is to register nbdroot also for pre-downloaded files. (via PreDownloadedAction)
+
+Problem #2:
+But PreDownloadedAction only know full path to the nbdroot, so we need
+to add a check in XnbdAction() since "normal nbdroot" are stored via
+relative path.
+
+Problem #3:
+The last problem is that when using a postprocessed NBD root,
+NBDSERVERIP and NBDSERVERPORT are not replaced.
+So the "use NBD" check in BootloaderCommandOverlay need to be replaced.
+---
+ lava_dispatcher/actions/boot/__init__.py   |  5 +----
+ lava_dispatcher/actions/deploy/download.py |  2 ++
+ lava_dispatcher/actions/deploy/nbd.py      | 10 +++++++++-
+ 3 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/lava_dispatcher/actions/boot/__init__.py b/lava_dispatcher/actions/boot/__init__.py
+index 990a03d2b..44ab56db1 100644
+--- a/lava_dispatcher/actions/boot/__init__.py
++++ b/lava_dispatcher/actions/boot/__init__.py
+@@ -546,10 +546,7 @@ class BootloaderCommandOverlay(Action):
+                 action="persistent-nfs-overlay", label="nfs_address", key="serverip"
+             )
+ 
+-        nbd_root = self.get_namespace_data(
+-            action="download-action", label="file", key="nbdroot"
+-        )
+-        if nbd_root:
++        if "lava-xnbd" in self.parameters:
+             substitutions["{NBDSERVERIP}"] = str(
+                 self.get_namespace_data(
+                     action="nbd-deploy", label="nbd", key="nbd_server_ip"
+diff --git a/lava_dispatcher/actions/deploy/download.py b/lava_dispatcher/actions/deploy/download.py
+index a739aa39f..49930615d 100644
+--- a/lava_dispatcher/actions/deploy/download.py
++++ b/lava_dispatcher/actions/deploy/download.py
+@@ -786,6 +786,8 @@ class PreDownloadedAction(Action):
+         self.set_namespace_data(
+             action="download-action", label=self.key, key="file", value=str(dest)
+         )
++        if "lava-xnbd" in self.parameters and str(self.key) == "nbdroot":
++            self.parameters["lava-xnbd"]["nbdroot"] = str(dest)
+ 
+         return connection
+ 
+diff --git a/lava_dispatcher/actions/deploy/nbd.py b/lava_dispatcher/actions/deploy/nbd.py
+index 1d399e511..232623de9 100644
+--- a/lava_dispatcher/actions/deploy/nbd.py
++++ b/lava_dispatcher/actions/deploy/nbd.py
+@@ -22,6 +22,7 @@
+ # imported by the parser to populate the list of subclasses.
+ 
+ import os
++import re
+ import tempfile
+ 
+ from lava_dispatcher.action import Action, Pipeline
+@@ -197,6 +198,13 @@ class XnbdAction(Action):
+             self.nbd_server_port,
+             self.nbd_root,
+         )
++        if re.search(filesystem.tftpd_dir(), self.nbd_root):
++            fullpath_nbdroot = self.nbd_root
++        else:
++            fullpath_nbdroot = "%s/%s" % (
++                os.path.realpath(filesystem.tftpd_dir()),
++                self.nbd_root,
++            )
+         nbd_cmd = [
+             "xnbd-server",
+             "--logpath",
+@@ -205,7 +213,7 @@ class XnbdAction(Action):
+             "--target",
+             "--lport",
+             "%s" % self.nbd_server_port,
+-            "%s/%s" % (os.path.realpath(filesystem.tftpd_dir()), self.nbd_root),
++            fullpath_nbdroot,
+         ]
+         command_output = self.run_command(nbd_cmd, allow_fail=False)
+ 
+-- 
+2.26.2
+
