@@ -1,0 +1,46 @@
+From 71d927b2c48b75382170b39cb5fd0c1c7605ff12 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 5 Feb 2021 11:33:21 +0000
+Subject: [PATCH] meson: permit to use booti
+
+meson templates does not use booti since some board are stuck with
+vendor uboot which dont handle it.
+But vast majority of boards have mainline uboot and so could handle it.
+
+So to permit to use booti, let's add a use_mainline_uboot flag.
+---
+ etc/dispatcher-config/device-types/meson-g12-common.jinja2 | 6 ++++++
+ etc/dispatcher-config/device-types/meson-gx-common.jinja2  | 6 ++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/etc/dispatcher-config/device-types/meson-g12-common.jinja2 b/etc/dispatcher-config/device-types/meson-g12-common.jinja2
+index 20a4e06dc..230a896c6 100644
+--- a/etc/dispatcher-config/device-types/meson-g12-common.jinja2
++++ b/etc/dispatcher-config/device-types/meson-g12-common.jinja2
+@@ -8,3 +8,9 @@
+ {% set bootm_kernel_addr = '0x01080000' %}
+ {% set bootm_dtb_addr = '0x01070000' %}
+ {% set bootm_ramdisk_addr = '0x08000000' %}
++
++{% if use_mainline_uboot %}
++{% set booti_kernel_addr = '0x1080000' %}
++{% set booti_dtb_addr = '0x1000000' %}
++{% set booti_ramdisk_addr = '0x13000000' %}
++{% endif %}
+diff --git a/etc/dispatcher-config/device-types/meson-gx-common.jinja2 b/etc/dispatcher-config/device-types/meson-gx-common.jinja2
+index 79905c61d..b46561196 100644
+--- a/etc/dispatcher-config/device-types/meson-gx-common.jinja2
++++ b/etc/dispatcher-config/device-types/meson-gx-common.jinja2
+@@ -10,3 +10,9 @@
+ {% set bootm_kernel_addr = '0x1080000' %}
+ {% set bootm_dtb_addr = '0x1000000' %}
+ {% set bootm_ramdisk_addr = '0x3000000' %}
++
++{% if use_mainline_uboot %}
++{% set booti_kernel_addr = '0x1080000' %}
++{% set booti_dtb_addr = '0x1000000' %}
++{% set booti_ramdisk_addr = '0x13000000' %}
++{% endif %}
+-- 
+2.26.2
+
