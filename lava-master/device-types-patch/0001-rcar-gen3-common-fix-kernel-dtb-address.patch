@@ -1,0 +1,35 @@
+From ec10a98ff6b3eb3298898ba7791bc3a6b61d90cb Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Tue, 26 Jan 2021 08:46:59 +0000
+Subject: [PATCH] rcar-gen3-common: fix kernel/dtb address
+
+The address used by all renesas are wrong, they worked until some change
+upstream made them unusuable.
+The problem was reported here:
+https://lore.kernel.org/linux-arm-kernel/X%2FQ21vZcui0RlYWK@Red/
+
+I have tested thoses address on all renesas supported by LAVA.
+- r8a7796-m3ulcb (tested in kernelci/baylibre lab)
+- r8a7795-salvator-x (tested in kernelci/baylibre lab)
+- r8a7795-h3ulcb-kf (tested in AGL lab)
+---
+ etc/dispatcher-config/device-types/rcar-gen3-common.jinja2 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/etc/dispatcher-config/device-types/rcar-gen3-common.jinja2 b/etc/dispatcher-config/device-types/rcar-gen3-common.jinja2
+index 0c5da436e..8c1c96a91 100644
+--- a/etc/dispatcher-config/device-types/rcar-gen3-common.jinja2
++++ b/etc/dispatcher-config/device-types/rcar-gen3-common.jinja2
+@@ -2,7 +2,7 @@
+ {% extends 'base-uboot.jinja2' %}
+ 
+ {% set console_device = console_device|default('ttySC0') %}
+-{% set booti_kernel_addr = '0x48080000' %}
++{% set booti_kernel_addr = '0x68080000' %}
+ {% set booti_ramdisk_addr = '0x4a000000' %}
+-{% set booti_dtb_addr = '0x48000000' %}
++{% set booti_dtb_addr = '0x68000000' %}
+ {% set uboot_mkimage_arch = 'arm64' %}
+-- 
+2.26.2
+
