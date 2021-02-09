@@ -1,0 +1,15 @@
+diff --git a/etc/dispatcher-config/device-types/alpine-db.jinja2 b/etc/dispatcher-config/device-types/alpine-db.jinja2
+index cb81e1339..6952a7e76 100644
+--- a/etc/dispatcher-config/device-types/alpine-db.jinja2
++++ b/etc/dispatcher-config/device-types/alpine-db.jinja2
+@@ -9,7 +9,7 @@
+ {% set base_ip_args = 'ip=dhcp' %}
+ {% set uboot_mkimage_arch = 'arm' %}
+ {% set uboot_tftp_commands = [
+-    "setenv loadkernel 'tftpboot {KERNEL_ADDR} {KERNEL}'",
+-    "setenv loadinitrd 'tftpboot {RAMDISK_ADDR} {RAMDISK}; setenv initrd_size ${filesize}'",
+-    "setenv loadfdt 'tftpboot {DTB_ADDR} {DTB}; fdt addr {DTB_ADDR}; fdt resize; fdt set /soc/uart@fd883000 clock-frequency <375000000>;'"]
++    "tftpboot {KERNEL_ADDR} {KERNEL}",
++    "tftpboot {RAMDISK_ADDR} {RAMDISK}; setenv initrd_size ${filesize}",
++    "tftpboot {DTB_ADDR} {DTB}; fdt addr {DTB_ADDR}; fdt resize; fdt set /soc/uart@fd883000 clock-frequency <375000000>;"]
+ -%}
