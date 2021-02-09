@@ -1,0 +1,13 @@
+diff --git a/lava_dispatcher/utils/udev.py b/lava_dispatcher/utils/udev.py
+index b7005a86d..a07c59c27 100644
+--- a/lava_dispatcher/utils/udev.py
++++ b/lava_dispatcher/utils/udev.py
+@@ -253,6 +253,8 @@ def wait_udev_event(match_dict=None, subsystem=None, devtype=None, devicepath=No
+     # Start to listen for events
+     monitor.start()
+ 
++    time.sleep(5)
++
+     # Check if the device is already plugged-in
+     for device in context.list_devices():
+         if match(device, match_dict, devicepath):
