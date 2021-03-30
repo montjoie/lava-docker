@@ -116,7 +116,7 @@ def main():
         keywords_master = [
             "allowed_hosts",
             "build_args",
-            "groups",
+            "groups", "gunicorn_workers",
             "healthcheck_url", "host", "http_fqdn",
             "loglevel", "lava-coordinator",
             "name",
@@ -197,6 +197,10 @@ def main():
             f_entrypoint.write("exit $?\n")
             f_entrypoint.close()
             os.chmod("%s/entrypoint.d/02_lava-coordinator.sh" % workerdir, 0o755)
+        if "gunicorn_workers" in worker:
+            dockcomp["services"][name]["environment"] = {}
+            dockcomp["services"][name]["environment"]["GUNICORN_WORKERS"] = worker["gunicorn_workers"]
+
         with open(dockcomposeymlpath, 'w') as f:
             yaml.dump(dockcomp, f)
         if "healthcheck_url" in master:
