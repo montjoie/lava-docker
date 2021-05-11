@@ -1,0 +1,28 @@
+From 6db433af0138c81d479f6747873a566d7c902631 Mon Sep 17 00:00:00 2001
+From: Corentin LABBE <clabbe@baylibre.com>
+Date: Fri, 7 May 2021 07:09:24 +0000
+Subject: [PATCH] Set environment for qemu in docker
+
+When using qemu in docker, environment are not passed to it.
+For the moment, only QEMU_AUDIO_DRV is usefull for qemu, so we pass only
+it for limiting the length of the command line.
+---
+ lava_dispatcher/actions/boot/qemu.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lava_dispatcher/actions/boot/qemu.py b/lava_dispatcher/actions/boot/qemu.py
+index 58e5ee868..a7e6f283b 100644
+--- a/lava_dispatcher/actions/boot/qemu.py
++++ b/lava_dispatcher/actions/boot/qemu.py
+@@ -318,6 +318,8 @@ class CallQemuAction(Action):
+             docker = DockerRun.from_parameters(self.parameters["docker"], self.job)
+             docker.interactive()
+             docker.tty()
++            if "QEMU_AUDIO_DRV" in os.environ:
++                docker.environment("QEMU_AUDIO_DRV", os.environ["QEMU_AUDIO_DRV"])
+             docker.bind_mount(DISPATCHER_DOWNLOAD_DIR)
+             docker.add_device("/dev/kvm", skip_missing=True)
+             args = []
+-- 
+2.26.2
+
