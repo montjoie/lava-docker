@@ -1,0 +1,10 @@
+name: basic
+on: [push]
+jobs:
+  check-lava-lab-gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: ls -l
+      - run: ./lavalab-gen.py
+      - run: cd output/local && docker-compose build
